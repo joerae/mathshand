@@ -215,61 +215,127 @@ body {
   color: var(--text-muted);
 }
 
-/* Monster Panel */
-.monster-panel {
-  border-top: 4px solid #4b5563;
+/* --- Physical Card Simulation --- */
+.creature-encounter-panel {
+  border-top: 4px solid #0284c7;
+  background: #f0fdfa;
 }
 
-.monster-content {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 20px;
+.fish-card-landscape {
+  width: 100%;
+  max-width: 440px;
+  height: 200px;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+  border: 2.5px solid #0284c7;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  margin: 0 auto 10px auto;
+  user-select: none;
+}
+
+.fish-card-header {
+  background: #e0f2fe;
+  border-bottom: 1.5px solid #bae6fd;
+  padding: 6px 12px;
+  text-align: center;
+}
+
+.fish-card-title {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #0369a1;
+  letter-spacing: 0.03em;
+}
+
+.fish-card-art {
+  flex: 1;
+  display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  justify-content: center;
+  padding: 4px;
+  overflow: hidden;
 }
 
-.monster-target-box {
+.fish-card-art .fish-svg {
+  max-height: 110px;
+  width: auto;
+  max-width: 100%;
+  transition: transform 0.2s ease;
+}
+
+.fish-card-landscape:hover .fish-svg {
+  transform: scale(1.04);
+}
+
+.fish-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 14px;
+  background: #ffffff;
+  border-top: 1.5px solid #bae6fd;
+}
+
+.fish-card-target-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: #111827;
   color: #ffffff;
-  padding: 12px 20px;
-  border-radius: 8px;
-  text-align: center;
-  min-width: 110px;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
-.target-label {
-  display: block;
-  font-size: 0.75rem;
+.fish-card-target-box .badge-sub {
+  font-size: 0.65rem;
+  font-weight: 700;
   opacity: 0.8;
-  margin-bottom: 2px;
 }
 
-.target-number {
-  font-size: 2.2rem;
-  font-weight: 800;
+.fish-card-target-box .badge-num {
+  font-size: 1.25rem;
+  font-weight: 900;
   line-height: 1;
 }
 
-.fish-recharge-tag {
-  margin-top: 6px;
-  font-size: 0.75rem;
-  background: #374151;
-  color: #fbbf24;
-  padding: 2px 6px;
-  border-radius: 4px;
+.fish-card-recharge-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef08a;
+  color: #854d0e;
+  border: 1.5px solid #eab308;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
+.fish-card-recharge-box .badge-sub {
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.fish-card-recharge-box .badge-num {
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Scooter Battery (5 Portrait Cards) */
 .scooter-battery-box {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed #bae6fd;
 }
 
 .battery-header {
   display: flex;
   justify-content: space-between;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .battery-label {
@@ -279,41 +345,87 @@ body {
 
 .battery-cards-row {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: nowrap; /* Forces all 5 cards onto the exact same line */
+  margin: 8px auto;
+  width: 100%;
+  max-width: 440px;
 }
 
 .battery-card {
-  width: 38px;
-  height: 52px;
-  border-radius: 6px;
+  flex: 1 1 0;
+  max-width: 76px;
+  min-width: 48px;
+  height: 106px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  position: relative;
+  user-select: none;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  font-size: 1.25rem;
-  font-weight: 800;
-  user-select: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 5px 3px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .battery-card.charged {
-  background: #fef08a;
+  background: linear-gradient(180deg, #ffffff 0%, #fef08a 100%);
   border: 2px solid #eab308;
   color: #854d0e;
-  box-shadow: 0 2px 5px rgba(234, 179, 8, 0.25);
+  box-shadow: 0 3px 8px rgba(234, 179, 8, 0.25);
+}
+
+.battery-card.charged:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(234, 179, 8, 0.35);
 }
 
 .battery-card.depleted {
-  background: #e5e7eb;
+  background: #f3f4f6;
   border: 2px dashed #9ca3af;
   color: #9ca3af;
   opacity: 0.6;
 }
 
-.battery-help {
+.battery-card .bolt-corner {
+  align-self: flex-start;
   font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  padding-left: 2px;
+}
+
+.battery-card .bolt-center {
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.battery-card .bolt-badge {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+}
+
+.battery-card.charged .bolt-badge {
+  background: #fef08a;
+  border: 1px solid #facc15;
+  color: #713f12;
+}
+
+.battery-card.depleted .bolt-badge {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.battery-help {
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
@@ -323,39 +435,230 @@ body {
   color: #854d0e;
 }
 
-
-/* Market Panel */
-.market-slots-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-}
-
-@media (max-width: 500px) {
-  .market-slots-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.market-card {
-  background: #f9fafb;
-  border: 2px solid #e5e7eb;
+/* --- Consistent Portrait Card Proportions for All Playable Cards (82px x 118px) --- */
+.portrait-card {
+  width: 82px;
+  height: 118px;
   border-radius: 8px;
-  padding: 10px 6px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  box-sizing: border-box;
+  position: relative;
   user-select: none;
-  min-height: 90px;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
+  padding: 6px 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.market-card:hover {
-  border-color: #9ca3af;
-  background: #ffffff;
+.portrait-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+}
+
+.card-corner-top {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  padding-left: 2px;
+}
+
+.card-center-val {
+  font-size: 1.65rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.card-center-gems {
+  font-size: 1.35rem;
+  line-height: 1.1;
+  letter-spacing: -2px;
+  text-align: center;
+  word-break: break-all;
+}
+
+.card-target-bottom {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Number Card Operation Color Themes */
+.portrait-card.op-add {
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+  border: 2.5px solid #3b82f6;
+  color: #1e40af;
+}
+.portrait-card.op-add .card-corner-top { color: #2563eb; }
+
+.portrait-card.op-sub {
+  background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%);
+  border: 2.5px solid #ef4444;
+  color: #b91c1c;
+}
+.portrait-card.op-sub .card-corner-top { color: #dc2626; }
+
+.portrait-card.op-mult {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+  border: 2.5px solid #8b5cf6;
+  color: #6d28d9;
+}
+.portrait-card.op-mult .card-corner-top { color: #7c3aed; }
+
+/* Treasure Cards in Stockpile */
+.portrait-card.treasure-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+  border: 2.5px solid #f59e0b;
+  color: #92400e;
+  box-shadow: 0 2px 5px rgba(245, 158, 11, 0.15), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.portrait-card.treasure-card:hover {
+  border-color: #d97706;
+  box-shadow: 0 6px 14px rgba(245, 158, 11, 0.25);
+}
+.portrait-card.treasure-card .card-corner-top {
+  color: #b45309;
+}
+.portrait-card.treasure-card .card-target-bottom {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* Selected Card in Hand or Targeted */
+.portrait-card.selected {
+  outline: 2.5px solid #0f172a !important;
+  transform: translateY(-6px) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.22) !important;
+}
+
+.portrait-card .card-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Matched Cards Pulse */
+.portrait-card.matched {
+  border-color: #10b981 !important;
+  background: #ecfdf5 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.45);
+  animation: pulseMatch 1.5s infinite alternate ease-in-out;
+}
+
+.portrait-card .card-match-indicator {
+  position: absolute;
+  bottom: -9px;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}
+
+@keyframes pulseMatch {
+  0% { box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3); }
+  100% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.7); }
+}
+
+/* Empty Market Card Slots (Consistent 82px x 118px) */
+.portrait-card.market-card.empty {
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  color: #9ca3af;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 8px 4px;
+}
+
+.portrait-card.market-card.empty:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.empty-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.empty-slot-icon {
+  font-size: 1.4rem;
+  opacity: 0.45;
+  line-height: 1;
+}
+
+.empty-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.empty-sub {
+  font-size: 0.6rem;
+  color: #9ca3af;
+  line-height: 1.1;
+}
+
+/* Market Panel */
+.market-slots-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.market-card.empty {
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  color: #9ca3af;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.market-card.empty:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.empty-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.market-card .sub {
+  font-size: 0.65rem;
+  margin-top: 2px;
 }
 
 .market-card.selected {
@@ -466,76 +769,155 @@ body {
   font-weight: 700;
 }
 
-/* Workbench & Live Calculation */
-.formula-box {
-  background: #111827;
-  color: #f9fafb;
-  border-radius: 8px;
-  padding: 12px 14px;
+/* Workbench & Live Calculation Playmat */
+.workbench-header-controls {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+}
+
+.calc-debug-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.calc-debug-toggle input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: #2563eb;
+  width: 14px;
+  height: 14px;
+}
+
+.calc-debug-toggle:hover {
+  color: #1e3a8a;
+}
+
+.formula-box {
+  background: #0f172a;
+  color: #f9fafb;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 144px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .formula-chain {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  font-size: 1rem;
+  gap: 8px;
+  min-height: 124px;
 }
 
-.placeholder {
-  color: #9ca3af;
-  font-size: 0.85rem;
-  font-style: italic;
+/* Base starting card on workbench */
+.workbench-start-card {
+  width: 68px;
+  height: 110px;
+  border-radius: 8px;
+  background: #1e293b;
+  border: 2px dashed #475569;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 4px;
+  box-sizing: border-box;
+  user-select: none;
+  flex-shrink: 0;
 }
 
-.seq-token {
-  background: #374151;
-  padding: 4px 8px;
-  border-radius: 4px;
+.workbench-start-card .start-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.workbench-start-card .start-val {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #38bdf8;
+  line-height: 1;
+}
+
+.workbench-start-card .start-sub {
+  font-size: 0.65rem;
+  color: #64748b;
   font-weight: 700;
 }
 
-.seq-token.step {
+.workbench-arrow {
+  color: #64748b;
+  font-size: 1.3rem;
+  font-weight: 900;
+  user-select: none;
+}
+
+/* Cards placed on workbench */
+.workbench-card.portrait-card {
+  flex-shrink: 0;
   cursor: pointer;
-  border: 1px solid #4b5563;
 }
 
-.seq-token.step:hover {
-  background: #4b5563;
-  border-color: #ef4444;
+.workbench-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.25);
 }
 
-.seq-token.step small {
-  font-size: 0.75rem;
-  color: #93c5fd;
-  font-weight: normal;
+.card-calc-step {
+  position: absolute;
+  bottom: -9px;
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
 }
 
-.seq-arrow {
-  color: #6b7280;
-  font-weight: bold;
+.workbench-empty-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-style: italic;
+  padding-left: 8px;
 }
 
 .formula-result {
+  align-self: flex-end;
   text-align: right;
   min-width: 90px;
+  padding-top: 4px;
+}
+
+.formula-result.hidden-calc {
+  display: none;
 }
 
 .result-label {
   display: block;
-  font-size: 0.75rem;
-  color: #9ca3af;
+  font-size: 0.72rem;
+  color: #94a3b8;
 }
 
 .result-value {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  color: #60a5fa;
+  color: #38bdf8;
   line-height: 1;
 }
 
@@ -937,18 +1319,48 @@ body {
 }
 
 .mini-cards {
-  gap: 5px;
-  min-height: 26px;
+  gap: 6px;
+  min-height: 28px;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .mini-card {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 4px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
+  width: 44px;
+  height: 62px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   user-select: none;
+  transition: transform 0.15s ease;
+}
+
+.mini-card:hover {
+  transform: translateY(-2px);
+}
+
+.mini-card.op-add {
+  background: #eff6ff;
+  border: 1.5px solid #93c5fd;
+  color: #1e40af;
+}
+
+.mini-card.op-sub {
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  color: #b91c1c;
+}
+
+.mini-card.op-mult {
+  background: #f5f3ff;
+  border: 1.5px solid #c4b5fd;
+  color: #6d28d9;
 }
 
 .placeholder-sm {
@@ -1022,29 +1434,54 @@ body {
   align-items: center;
 }
 
-.treasure-chest-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #ffffff;
-  border: 1.5px solid #fcd34d;
-  padding: 4px 8px;
+.treasure-chest-item, .mini-portrait-card {
+  width: 58px;
+  height: 84px;
   border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.1);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 3px;
+  background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+  border: 1.5px solid #f59e0b;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15);
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.treasure-chest-item .t-gems {
-  font-size: 0.95rem;
-  letter-spacing: -1px;
+.treasure-chest-item:hover, .mini-portrait-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.25);
 }
 
-.treasure-chest-item .t-target {
-  font-size: 0.75rem;
+.treasure-chest-item .t-corner, .mini-portrait-card .mini-corner {
+  align-self: flex-start;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #b45309;
+  line-height: 1;
+  padding-left: 2px;
+}
+
+.treasure-chest-item .t-gems, .mini-portrait-card .mini-center {
+  font-size: 1.05rem;
+  line-height: 1.1;
+  letter-spacing: -2px;
+  text-align: center;
+  word-break: break-all;
+}
+
+.treasure-chest-item .t-target, .mini-portrait-card .mini-target {
+  font-size: 0.65rem;
   font-weight: 700;
   color: #92400e;
   background: #fef3c7;
-  padding: 1px 5px;
+  padding: 1px 4px;
   border-radius: 3px;
+  border: 1px solid #fde68a;
+  white-space: nowrap;
 }
 
 /* --- v0.6 Treasure Stockpile Styles --- */

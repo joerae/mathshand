@@ -34,6 +34,7 @@
         <div class="stat-pill treasure-pill" title="Gems in current adventure and permanent legacy stash">
           Run: <strong>💎 <span id="stat-gem-count">0</span></strong> | Stash: <strong>💎 <span id="stat-stash-count">0</span></strong>
         </div>
+        <button id="btn-end-run" class="btn-secondary" title="End adventure and bank all collected gems">⚓ End Run</button>
         <button id="btn-restart" class="btn-secondary" title="Reset adventure to starting state">🔄 Restart</button>
       </div>
     </header>
@@ -53,28 +54,41 @@
     <main class="board-grid">
       <!-- LEFT COLUMN: Sea Creature > Your Hand > Actions > Treasure Chest -->
       <section class="left-col">
-        <!-- 1. Current Sea Creature Encounter -->
-        <div class="panel monster-panel">
+        <!-- 1. Current Sea Creature Encounter (Physical Landscape Card) -->
+        <div class="panel creature-encounter-panel">
           <div class="panel-header">
             <span class="panel-tag">CURRENT SEA CREATURE</span>
-            <h2 id="monster-name">Fish 1/6</h2>
+            <span id="encounter-step-tag" class="panel-hint">Encounter Card (Landscape)</span>
           </div>
 
-          <div class="monster-content">
-            <div class="monster-target-box">
-              <span class="target-label">🎯 TARGET</span>
-              <span id="monster-target" class="target-number">10</span>
-              <div class="fish-recharge-tag">⚡ Recharge: <strong id="fish-recharge-val">+4</strong></div>
+          <!-- Landscape Card Simulation -->
+          <div class="fish-card-landscape" id="fish-card-landscape">
+            <div class="fish-card-header">
+              <span id="monster-name" class="fish-card-title">Chainsaw Clownfish</span>
             </div>
-
-            <div class="scooter-battery-box">
-              <div class="battery-header">
-                <span class="battery-label">⚡ SCOOTER BATTERY</span>
-                <span id="battery-count-text" class="battery-count">5 / 5 Bolts</span>
+            <div id="creature-art" class="fish-card-art">
+              <!-- SVG graphic injected dynamically -->
+            </div>
+            <div class="fish-card-footer">
+              <div class="fish-card-target-box">
+                <span class="badge-sub">TARGET</span>
+                <span id="monster-target" class="badge-num">10</span>
               </div>
-              <div id="battery-cards-row" class="battery-cards-row"></div>
-              <div class="battery-help">Five double-sided bolt cards. Each action costs 1 bolt. Defeating sea creatures restores battery!</div>
+              <div class="fish-card-recharge-box">
+                <span class="badge-sub">RECHARGE</span>
+                <span id="fish-recharge-val" class="badge-num">+4 ⚡</span>
+              </div>
             </div>
+          </div>
+
+          <!-- Scooter Battery (5 Double-Sided Portrait Cards) -->
+          <div class="scooter-battery-box">
+            <div class="battery-header">
+              <span class="battery-label">⚡ SCOOTER BATTERY</span>
+              <span id="battery-count-text" class="battery-count">5 / 5 Bolts</span>
+            </div>
+            <div id="battery-cards-row" class="battery-cards-row"></div>
+            <div class="battery-help">Five double-sided bolt cards (portrait). Costs 1 bolt per action. Defeating creatures restores bolts!</div>
           </div>
         </div>
 
@@ -173,16 +187,22 @@
         <div class="panel workbench-panel">
           <div class="panel-header">
             <span class="panel-tag">CALCULATION WORKBENCH</span>
-            <button id="btn-clear-seq" class="btn-text">✕ Clear Selection</button>
+            <div class="workbench-header-controls">
+              <label class="calc-debug-toggle" title="Show running total and calculation hints">
+                <input type="checkbox" id="chk-auto-calc">
+                <span>🧮 Auto-Calc (Debug)</span>
+              </label>
+              <button id="btn-clear-seq" class="btn-text">✕ Return All to Hand</button>
+            </div>
           </div>
 
           <div class="formula-box">
             <div id="formula-chain" class="formula-chain">
-              <!-- Tokens injected here -->
+              <!-- Physical cards on workbench injected here -->
             </div>
-            <div class="formula-result">
-              <span class="result-label">Total:</span>
-              <span id="running-total" class="result-value">0</span>
+            <div id="formula-result-container" class="formula-result hidden-calc">
+              <span class="result-label">Evaluated Total:</span>
+              <span id="running-total" class="result-value">?</span>
             </div>
           </div>
 
@@ -203,6 +223,13 @@
         <details class="panel debug-panel">
           <summary class="panel-tag debug-summary">⚙️ Rules Tuning & Debug Tools (Click to expand)</summary>
           <div class="debug-controls-grid">
+            <div class="debug-group">
+              <label>Auto-Calculator:</label>
+              <label class="calc-debug-toggle" style="margin-left: 4px;">
+                <input type="checkbox" id="debug-chk-auto-calc">
+                <span>Show Total & Match State</span>
+              </label>
+            </div>
             <div class="debug-group">
               <label>Creature Navigation:</label>
               <button id="debug-skip-monster" class="btn-sm">Skip Creature ⏭</button>

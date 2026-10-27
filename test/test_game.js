@@ -154,20 +154,42 @@ assert.strictEqual(missRes.finalAttack, true);
 assert.strictEqual(failGame.status, 'lost', 'Status must be lost on Final Attack miss');
 console.log('   ✓ Final Attack miss ends journey.');
 
-// Test 8: Great White Shark (Fish 6) Defeat & Automatic Victory Bonus
-console.log('8. Testing Great White Shark defeat and victory treasure bonus...');
-const victoryGame = new GameState();
-victoryGame.currentMonsterIndex = 5;
-const shark = victoryGame.currentMonster;
-assert.strictEqual(shark.name, 'Great White Shark');
-assert.strictEqual(shark.target, 98);
+// Test 9: Post-Game Treasure Shopping with Remaining Bolts & End Run
+console.log('9. Testing post-game treasure shopping with remaining bolts & End Run...');
+const postGameTest = new GameState();
+postGameTest.currentMonsterIndex = 5;
+// Add a treasure to stockpile and give 3 bolts
+postGameTest.treasureStockpile.push({
+  uid: 'post_t1',
+  type: 'treasure',
+  target: 4,
+  gems: 1,
+  label: '💎'
+});
+postGameTest.currentBolts = 3;
 
-victoryGame.hand.push({ uid: 'shark_slayer', type: 'number', op: '+', value: 98, label: '+98', target: 98 });
-const sharkRes = victoryGame.playAttack(victoryGame.hand.filter(c => c.uid === 'shark_slayer'));
-assert.strictEqual(sharkRes.success, true);
-assert.strictEqual(victoryGame.status, 'won', 'Game status must be won');
-assert.ok(victoryGame.victoryTreasure !== null, 'Victory treasure awarded');
-assert.strictEqual(victoryGame.treasureChest.length, 1, 'Treasure chest has victory bonus');
-console.log(`   ✓ Great White Shark defeated! Won ${victoryGame.victoryTreasure.label} (+${victoryGame.victoryTreasure.gems} 💎). Adventure won!`);
+// Defeat Great White Shark (target 98)
+postGameTest.hand.push({ uid: 'm98', type: 'number', op: '+', value: 98, label: '+98', target: 98 });
+postGameTest.playAttack(postGameTest.hand.filter(c => c.uid === 'm98'));
 
-console.log('\n✅ ALL 8 v0.7 UNDERWATER SCOOTER TESTS PASSED SUCCESSFULLY!');
+// Shark defeated with 2 bolts left and 1 treasure in stockpile -> enters post_game
+assert.strictEqual(postGameTest.status, 'post_game', 'Should enter post_game phase');
+assert.strictEqual(postGameTest.currentBolts, 2, 'Has 2 bolts left after attack');
+
+// Claim treasure with remaining bolts (target 4)
+postGameTest.hand.push({ uid: 't4', type: 'number', op: '+', value: 4, label: '+4', target: 4 });
+const buyTRes = postGameTest.playBuy('stockpile', 0, postGameTest.hand.filter(c => c.uid === 't4'));
+assert.strictEqual(buyTRes.success, true, 'Claiming treasure in post_game should succeed');
+assert.strictEqual(postGameTest.currentBolts, 1, 'Used 1 bolt to claim treasure (2 -> 1)');
+assert.strictEqual(postGameTest.status, 'won', 'Stockpile cleared -> transitions to won');
+
+// Test voluntary endRun
+const endRunGame = new GameState();
+endRunGame.treasureChest.push({ uid: 'banked_t', gems: 3 });
+const erRes = endRunGame.endRun();
+assert.strictEqual(erRes.success, true, 'End run should succeed');
+assert.strictEqual(endRunGame.status, 'won', 'Status should be won after ending run');
+console.log('   ✓ Post-game treasure shopping with remaining bolts and End Run verified.');
+
+console.log('\n✅ ALL 9 v0.7 UNDERWATER SCOOTER TESTS PASSED SUCCESSFULLY!');
+

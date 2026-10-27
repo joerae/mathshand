@@ -308,16 +308,28 @@ export class GameState {
    */
   handleFishDefeat(isFinalFish, fish, fromFinalAttack = false) {
     if (isFinalFish) {
-      // Final fish (Great White Shark) defeated: award final treasure automatically & win!
+      // Final fish (Great White Shark) defeated: award final treasure automatically!
       const victoryTreasure = this.drawTreasureCard();
       if (victoryTreasure) {
         this.treasureChest.push(victoryTreasure);
         GameState.addPermanentGems(victoryTreasure.gems);
       }
       this.victoryTreasure = victoryTreasure;
-      this.status = 'won';
-      this.statusMessage = 'Victory! Great White Shark defeated! Adventure completed!';
-      this.addLog(`🏆 VICTORY: Great White Shark defeated! Final victory bonus: ${victoryTreasure ? `${victoryTreasure.label} (+${victoryTreasure.gems} 💎)` : 'None'}. Total gems earned: ${this.totalGems} 💎!`, 'victory');
+      this.sharkDefeated = true;
+
+      // Pick up all played cards so full hand is available to claim treasures
+      this.hand.push(...this.playerDiscard);
+      this.playerDiscard = [];
+
+      if (this.treasureStockpile.length > 0 && this.currentBolts > 0) {
+        this.status = 'post_game';
+        this.statusMessage = 'Great White Shark defeated! You can spend remaining bolts on stockpile treasures, or hit End Run to bank your haul.';
+        this.addLog(`🏆 GREAT WHITE SHARK DEFEATED! Victory bonus awarded (+${victoryTreasure ? victoryTreasure.gems : 0} 💎). You have ${this.currentBolts} bolts remaining to claim stockpile treasures, or hit "End Run" to bank your haul!`, 'victory');
+      } else {
+        this.status = 'won';
+        this.statusMessage = 'Victory! Great White Shark defeated! Adventure completed!';
+        this.addLog(`🏆 VICTORY: Great White Shark defeated! Final victory bonus: ${victoryTreasure ? `${victoryTreasure.label} (+${victoryTreasure.gems} 💎)` : 'None'}. Total gems earned: ${this.totalGems} 💎!`, 'victory');
+      }
     } else {
       // 1. Restore bolts
       const rechargeAmount = typeof fish.recharge === 'number' ? fish.recharge : 0;
@@ -353,12 +365,19 @@ export class GameState {
   /**
    * ACTION 2: Buy / Claim (Market Card OR Stockpile Treasure)
    * Costs 1 bolt.
-   * - targetType: 'market' (buys number card into hand, slot stays empty until next fish defeat or refresh)
+   * - targetType: 'market' (buys number card into hand)
    * - targetType: 'stockpile' (claims treasure into treasure chest)
    */
   playBuy(targetType, targetIndex, selectedNumberCards) {
-    if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
-    if (this.isFinalAttack) return { success: false, reason: 'Scooter is out of battery! Only Final Attack is available.' };
+    if (this.status !== 'in_progress' && this.status !== 'post_game') {
+      return { success: false, reason: 'Game has already ended.' };
+    }
+    if (this.isFinalAttack && this.status === 'in_progress') {
+      return { success: false, reason: 'Scooter is out of battery! Only Final Attack is available.' };
+    }
+    if (this.currentBolts <= 0) {
+      return { success: false, reason: 'Out of bolts.' };
+    }
 
     const targetCard = (targetType === 'stockpile')
       ? this.treasureStockpile[targetIndex]
@@ -386,7 +405,17 @@ export class GameState {
         GameState.addPermanentGems(targetCard.gems);
 
         this.addLog(`💎 TREASURE CLAIMED: [${sequenceSummary}] = ${total}. Claimed ${targetCard.label} (🎯 ${targetCard.target}, +${targetCard.gems} 💎)! Total: ${this.totalGems} 💎. (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'treasure');
-        this.checkFinalAttackTrigger();
+        
+        if (this.status === 'post_game') {
+          if (this.currentBolts === 0 || this.treasureStockpile.length === 0) {
+            this.status = 'won';
+            this.statusMessage = 'Victory! Completed post-game treasure claiming.';
+            this.addLog(`🏆 VICTORY COMPLETE: Finished spending remaining bolts. Total gems earned: ${this.totalGems} 💎!`, 'victory');
+          }
+        } else {
+          this.checkFinalAttackTrigger();
+        }
+
         return { success: true, targetMatched: true, targetType: 'stockpile', acquiredCard: targetCard, total };
       } else {
         // Buy number card from market -> into hand (slot stays empty until next fish defeat or refresh)
@@ -394,13 +423,32 @@ export class GameState {
         this.hand.push(targetCard);
 
         this.addLog(`🛒 BUY SUCCESS: [${sequenceSummary}] = ${total}. Acquired ${targetCard.label} (🎯 ${targetCard.target}) into hand! (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'success');
-        this.checkFinalAttackTrigger();
+        
+        if (this.status === 'post_game') {
+          if (this.currentBolts === 0) {
+            this.status = 'won';
+            this.statusMessage = 'Victory! Completed post-game shopping.';
+          }
+        } else {
+          this.checkFinalAttackTrigger();
+        }
+
         return { success: true, targetMatched: true, targetType: 'market', acquiredCard: targetCard, total };
       }
     } else {
       const typeDesc = targetType === 'stockpile' ? 'Treasure target' : 'Market card target';
       this.addLog(`❌ BUY FAILED: [${sequenceSummary}] = ${total}. Needed ${typeDesc} 🎯 ${targetCard.target}. (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'warning');
-      this.checkFinalAttackTrigger();
+      
+      if (this.status === 'post_game') {
+        if (this.currentBolts === 0) {
+          this.status = 'won';
+          this.statusMessage = 'Victory! Out of bolts during post-game.';
+          this.addLog(`🏆 VICTORY COMPLETE: Out of bolts. Banked ${this.totalGems} gems!`, 'victory');
+        }
+      } else {
+        this.checkFinalAttackTrigger();
+      }
+
       return { success: true, targetMatched: false, targetType, total };
     }
   }
@@ -432,8 +480,15 @@ export class GameState {
    * Returns all played number cards in player discard back to hand mid-encounter. Costs 1 bolt.
    */
   playPickup() {
-    if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
-    if (this.isFinalAttack) return { success: false, reason: 'Scooter is out of battery! Only Final Attack is available.' };
+    if (this.status !== 'in_progress' && this.status !== 'post_game') {
+      return { success: false, reason: 'Game has already ended.' };
+    }
+    if (this.isFinalAttack && this.status === 'in_progress') {
+      return { success: false, reason: 'Scooter is out of battery! Only Final Attack is available.' };
+    }
+    if (this.currentBolts <= 0) {
+      return { success: false, reason: 'Out of bolts.' };
+    }
 
     const returnedCount = this.playerDiscard.length;
     this.hand.push(...this.playerDiscard);
@@ -442,8 +497,30 @@ export class GameState {
     this.spendBolt();
 
     this.addLog(`✋ PICKUP: Retrieved ${returnedCount} cards from discard back to hand. (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'info');
-    this.checkFinalAttackTrigger();
+    
+    if (this.status === 'post_game' && this.currentBolts === 0) {
+      this.status = 'won';
+      this.statusMessage = 'Victory! Out of bolts during post-game.';
+      this.addLog(`🏆 VICTORY COMPLETE: Out of bolts. Banked ${this.totalGems} gems!`, 'victory');
+    } else {
+      this.checkFinalAttackTrigger();
+    }
+
     return { success: true, returnedCount };
+  }
+
+  /**
+   * Voluntary End Run: safely bank what you have collected and conclude the adventure.
+   */
+  endRun() {
+    if (this.status === 'won' || this.status === 'lost') {
+      return { success: false, reason: 'Adventure already concluded.' };
+    }
+
+    this.status = 'won';
+    this.statusMessage = `Adventure ended. Safely banked ${this.totalGems} gems!`;
+    this.addLog(`⚓ END RUN: Safely banked ${this.totalGems} gems! Permanent legacy stash: ${GameState.getPermanentGems()} 💎.`, 'victory');
+    return { success: true, totalGems: this.totalGems };
   }
 
   checkFinalAttackTrigger() {
