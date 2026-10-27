@@ -1,10 +1,10 @@
 /**
- * Card and Deck Configuration for Maths Handbuilder (v0.5)
+ * Card and Deck Configuration for Maths Handbuilder (v0.6)
  * 
- * In v0.5:
+ * In v0.6:
  * - Starting hand contains 3 cards: +1, +2, +3
- * - Actions (Attack, Buy, Market Refresh, Pickup) are always available actions, not cards
- * - Draw pile contains 66 number cards (Buy action cards removed)
+ * - Draw pile supplies market cards and Doom counters (70 number cards)
+ * - Treasure cards are kept in a separate deck (data/treasures.js)
  */
 
 export const GAME_CONFIG = {
@@ -23,9 +23,8 @@ export const STARTING_HAND = [
 ];
 
 /**
- * Draw pile distribution definition (66 cards total as per Section 6 in v0.5).
+ * Draw pile distribution definition (70 cards total as per Section 8).
  * All cards in the draw pile are number cards.
- * Edit counts and ranges here to adjust game balance.
  */
 export const DRAW_PILE_DISTRIBUTION = [
   // +1 to +4: 5 copies each (20 cards)
@@ -34,9 +33,8 @@ export const DRAW_PILE_DISTRIBUTION = [
   // +5 to +9: 3 copies each (15 cards)
   { op: '+', min: 5, max: 9, copies: 3 },
 
-  // −1 to −4: 3 copies each (12 cards)
-  // Target is the positive magnitude (e.g. -3 has target 3)
-  { op: '-', min: 1, max: 4, copies: 3 },
+  // −1 to −4: 4 copies each (16 cards)
+  { op: '-', min: 1, max: 4, copies: 4 },
 
   // ×2 to ×4: 3 copies each (9 cards)
   { op: '×', min: 2, max: 4, copies: 3 },
@@ -46,8 +44,7 @@ export const DRAW_PILE_DISTRIBUTION = [
 ];
 
 /**
- * Helper to build the full draw pile array from the distribution config (66 cards).
- * Assigns a unique UID to each physical card instance.
+ * Builds the draw pile of number cards (70 cards).
  */
 export function buildDrawPile() {
   const deck = [];
@@ -58,7 +55,6 @@ export function buildDrawPile() {
       for (let i = 0; i < entry.copies; i++) {
         const opSymbol = entry.op;
         const displayLabel = `${opSymbol}${val}`;
-        // Target is equal to numerical value magnitude (positive)
         const target = val;
 
         deck.push({

@@ -12,11 +12,11 @@
     <header class="top-bar">
       <div class="title-group">
         <h1>Maths Handbuilder</h1>
-        <span class="version-tag">Rules Prototype v0.5</span>
+        <span class="version-tag">Rules Prototype v0.6</span>
       </div>
 
       <div class="deck-stats">
-        <div class="stat-pill" title="Cards remaining in the 66-card draw deck">
+        <div class="stat-pill" title="Cards remaining in the 70-card draw deck">
           Draw Pile: <strong id="stat-draw-count">0</strong>
         </div>
         <div class="stat-pill" title="Reshuffle pile (spent doom counters & refreshed market cards)">
@@ -27,6 +27,9 @@
         </div>
         <div class="stat-pill" title="Number cards currently in your hand">
           Hand: <strong id="stat-hand-count">0</strong>
+        </div>
+        <div class="stat-pill treasure-pill" title="Total gems collected from treasure cards">
+          Treasure: <strong>💎 <span id="stat-gem-count">0</span></strong>
         </div>
         <button id="btn-restart" class="btn-secondary" title="Reset game to starting state">🔄 Restart</button>
       </div>
@@ -122,6 +125,18 @@
             </button>
           </div>
         </div>
+
+        <!-- 4. Treasure Chest (Gems Collected) -->
+        <div class="panel treasure-panel">
+          <div class="panel-header">
+            <span class="panel-tag">TREASURE CHEST</span>
+            <span class="panel-hint">Total: <strong id="treasure-gems-total">0 💎</strong></span>
+          </div>
+
+          <div id="treasure-collected-list" class="treasure-collected-row">
+            <!-- Collected gem cards injected dynamically -->
+          </div>
+        </div>
       </section>
 
       <!-- RIGHT COLUMN: Market > Calc > Log > Rules -->
@@ -138,7 +153,19 @@
           </div>
         </div>
 
-        <!-- 2. Calculation Workbench (Calc) -->
+        <!-- 2. Treasure Stockpile (Revealed by Monsters) -->
+        <div class="panel stockpile-panel">
+          <div class="panel-header">
+            <span class="panel-tag">TREASURE STOCKPILE</span>
+            <span class="panel-hint">Revealed by defeated monsters • Match target to claim</span>
+          </div>
+
+          <div id="stockpile-slots" class="stockpile-grid">
+            <!-- Stockpile cards injected here -->
+          </div>
+        </div>
+
+        <!-- 3. Calculation Workbench (Calc) -->
         <div class="panel workbench-panel">
           <div class="panel-header">
             <span class="panel-tag">CALCULATION WORKBENCH</span>
@@ -180,6 +207,10 @@
               <label>Doom Adjustment:</label>
               <button id="debug-add-doom" class="btn-sm">+1 Doom</button>
               <button id="debug-sub-doom" class="btn-sm">-1 Doom</button>
+            </div>
+            <div class="debug-group">
+              <label>Treasure Stockpile:</label>
+              <button id="debug-reveal-treasure" class="btn-sm">Reveal Treasure 💎</button>
             </div>
             <div class="debug-group debug-add-card">
               <label>Spawn Card into Hand:</label>

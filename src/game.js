@@ -1,7 +1,8 @@
 /**
- * Core Game Engine for Maths Handbuilder (v0.5)
+ * Core Game Engine for Maths Handbuilder (v0.6)
  */
 import { STARTING_HAND, buildDrawPile, GAME_CONFIG } from '../data/cards.js';
+import { buildTreasureDeck } from '../data/treasures.js';
 import { MONSTERS } from '../data/monsters.js';
 
 export function shuffle(array) {
@@ -23,16 +24,21 @@ export class GameState {
     this.monstersList = JSON.parse(JSON.stringify(this.monsters));
     this.currentMonsterIndex = 0;
     
-    // Decks & Piles
-    this.drawPile = shuffle(buildDrawPile()); // 66 number cards
+    // Number Draw Deck & Piles (70 cards)
+    this.drawPile = shuffle(buildDrawPile());
     this.drawDiscard = [];     // Discarded doom cards and refreshed market cards
     this.doomCards = [];       // Face-down cards on the current monster
     
-    // Player Hand & Discard (Only contains number cards in v0.5)
+    // Separate Treasure Deck & Stockpile (v0.6)
+    this.treasureDeck = shuffle(buildTreasureDeck());
+    this.treasureStockpile = []; // Revealed treasures available to claim (starts empty)
+    this.treasureChest = [];     // Claimed treasures / gems
+    
+    // Player Hand & Discard (Only contains number cards)
     this.hand = JSON.parse(JSON.stringify(STARTING_HAND)); // +1, +2, +3
     this.playerDiscard = [];
     
-    // Market: array of 5 slots (contains card object or null)
+    // Market: 5 number cards
     this.market = [];
     this.initMarket();
 
@@ -42,7 +48,7 @@ export class GameState {
 
     // Action log for reviewing turns
     this.log = [];
-    this.addLog('Game started (v0.5 rules). Starting hand: +1, +2, +3. First monster: ' + this.currentMonster.name);
+    this.addLog('Game started (v0.6 rules). Starting hand: +1, +2, +3. First monster: ' + this.currentMonster.name);
   }
 
   get currentMonster() {
@@ -51,6 +57,10 @@ export class GameState {
 
   get currentDoom() {
     return this.doomCards.length;
+  }
+
+  get totalGems() {
+    return this.treasureChest.reduce((sum, t) => sum + (t.gems || 0), 0);
   }
 
   /**
@@ -90,7 +100,29 @@ export class GameState {
   }
 
   /**
-   * Populate market with cards from draw pile up to marketSize
+   * Draw a card from separate treasure deck.
+   */
+  drawTreasureCard() {
+    if (this.treasureDeck.length === 0) {
+      return null;
+    }
+    return this.treasureDeck.pop();
+  }
+
+  /**
+   * Reveals a treasure from the treasure deck into the stockpile.
+   */
+  revealTreasureToStockpile() {
+    const treasure = this.drawTreasureCard();
+    if (treasure) {
+      this.treasureStockpile.push(treasure);
+      this.addLog(`💎 TREASURE REVEALED: Placed ${treasure.label} (🎯 Target: ${treasure.target}) into the stockpile!`, 'treasure');
+    }
+    return treasure;
+  }
+
+  /**
+   * Populate market with number cards from draw pile up to marketSize
    */
   initMarket() {
     this.market = [];
@@ -112,7 +144,6 @@ export class GameState {
 
   /**
    * Evaluates mathematical sequence from zero in order played.
-   * Number cards apply their operator (+, -, ×) to running total.
    */
   static calculateSequence(numberCards) {
     let runningTotal = 0;
@@ -174,20 +205,15 @@ export class GameState {
 
   /**
    * ACTION 1: Attack Monster
-   * In v0.5, Attack is an intrinsic action (always available).
-   * If in Final Attack:
-   *   - Success defeats monster and advances.
-   *   - Failure immediately ends the game in defeat!
-   * If not in Final Attack:
-   *   - Adds 1 Doom counter.
-   *   - Success defeats monster and advances.
-   *   - Failure keeps monster and triggers Final Attack if doom reaches limit.
+   * Defeating monster 1-5 adds 1 treasure to the stockpile.
+   * Defeating the final monster automatically awards final treasure and wins!
    */
   playAttack(selectedNumberCards) {
     if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
 
     const wasFinalAttack = this.isFinalAttack;
     const monster = this.currentMonster;
+    const isFinalMonster = (this.currentMonsterIndex === this.monstersList.length - 1);
     const { total, steps } = GameState.calculateSequence(selectedNumberCards);
     const targetMatched = (total === monster.target);
     const sequenceSummary = steps.map(s => s.card.label).join(' → ') || '(0 cards)';
@@ -196,23 +222,14 @@ export class GameState {
     this.discardFromHand(selectedNumberCards);
 
     if (wasFinalAttack) {
-      // Final Attack chance: do not add extra doom, this is the final resolution
       if (targetMatched) {
         this.addLog(`⚔️ FINAL ATTACK SUCCESS: [${sequenceSummary}] = ${total}. Defeated ${monster.name} on the brink of doom!`, 'success');
         this.drawDiscard.push(...this.doomCards);
         this.doomCards = [];
 
-        this.currentMonsterIndex++;
-        if (this.currentMonsterIndex >= this.monstersList.length) {
-          this.status = 'won';
-          this.statusMessage = 'Victory! All monsters defeated!';
-          this.addLog('🏆 VICTORY: You have defeated all monsters and won the game!', 'victory');
-        } else {
-          this.addLog(`Next monster revealed: ${this.currentMonster.name} (🎯 ${this.currentMonster.target}, ☠ Doom Limit ${this.currentMonster.doomLimit})`, 'info');
-        }
+        this.handleMonsterDefeat(isFinalMonster, monster);
         return { success: true, targetMatched: true, finalAttack: true, total };
       } else {
-        // Final attack failed -> Game Over!
         this.status = 'lost';
         this.statusMessage = `Final Attack failed against ${monster.name}! Needed 🎯 ${monster.target}, got ${total}.`;
         this.addLog(`☠️ GAME OVER: Final Attack missed [${sequenceSummary}] = ${total} (needed 🎯 ${monster.target}). The monster overwhelmed you!`, 'danger');
@@ -228,14 +245,7 @@ export class GameState {
       this.drawDiscard.push(...this.doomCards);
       this.doomCards = [];
 
-      this.currentMonsterIndex++;
-      if (this.currentMonsterIndex >= this.monstersList.length) {
-        this.status = 'won';
-        this.statusMessage = 'Victory! All monsters defeated!';
-        this.addLog('🏆 VICTORY: You have defeated all monsters and won the game!', 'victory');
-      } else {
-        this.addLog(`Next monster revealed: ${this.currentMonster.name} (🎯 ${this.currentMonster.target}, ☠ Doom Limit ${this.currentMonster.doomLimit})`, 'info');
-      }
+      this.handleMonsterDefeat(isFinalMonster, monster);
       return { success: true, targetMatched: true, finalAttack: false, total };
     } else {
       this.addLog(`❌ ATTACK FAILED: [${sequenceSummary}] = ${total}. Needed 🎯 ${monster.target}. (Doom: ${this.currentDoom}/${monster.doomLimit})`, 'warning');
@@ -244,21 +254,44 @@ export class GameState {
     }
   }
 
+  handleMonsterDefeat(isFinalMonster, monster) {
+    if (isFinalMonster) {
+      // Final monster defeated: award final treasure automatically!
+      const victoryTreasure = this.drawTreasureCard();
+      if (victoryTreasure) {
+        this.treasureChest.push(victoryTreasure);
+      }
+      this.status = 'won';
+      this.statusMessage = 'Victory! All monsters defeated!';
+      this.addLog(`🏆 VICTORY: All monsters defeated! Final victory bonus: ${victoryTreasure ? `${victoryTreasure.label} (+${victoryTreasure.gems} 💎)` : 'None'}. Total gems earned: ${this.totalGems} 💎!`, 'victory');
+    } else {
+      // Monsters 1 to 5: reveal 1 treasure into the stockpile
+      this.currentMonsterIndex++;
+      this.revealTreasureToStockpile();
+      this.addLog(`Next monster revealed: ${this.currentMonster.name} (🎯 ${this.currentMonster.target}, ☠ Doom Limit ${this.currentMonster.doomLimit})`, 'info');
+    }
+  }
+
   /**
-   * ACTION 2: Buy Market Card
-   * In v0.5, Buy is an intrinsic action (always available unless in Final Attack).
+   * ACTION 2: Buy (Market Card OR Stockpile Treasure)
+   * In v0.6:
+   * - targetType: 'market' (buys number card into hand)
+   * - targetType: 'stockpile' (claims treasure into treasure chest)
    */
-  playBuy(marketIndex, selectedNumberCards) {
+  playBuy(targetType, targetIndex, selectedNumberCards) {
     if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
     if (this.isFinalAttack) return { success: false, reason: 'Final Attack active! No other actions are available.' };
 
-    const marketCard = this.market[marketIndex];
-    if (!marketCard) {
-      return { success: false, reason: 'Selected market slot is empty.' };
+    const targetCard = (targetType === 'stockpile')
+      ? this.treasureStockpile[targetIndex]
+      : this.market[targetIndex];
+
+    if (!targetCard) {
+      return { success: false, reason: 'Selected target slot is empty.' };
     }
 
     const { total, steps } = GameState.calculateSequence(selectedNumberCards);
-    const targetMatched = (total === marketCard.target);
+    const targetMatched = (total === targetCard.target);
     const sequenceSummary = steps.map(s => s.card.label).join(' → ') || '(0 cards)';
 
     // Discard played number cards
@@ -268,39 +301,46 @@ export class GameState {
     this.addDoomCard();
 
     if (targetMatched) {
-      // Purchased card goes immediately to hand
-      this.hand.push(marketCard);
-      this.market[marketIndex] = null;
+      if (targetType === 'stockpile') {
+        // Claim treasure from stockpile -> into treasure chest
+        this.treasureStockpile.splice(targetIndex, 1);
+        this.treasureChest.push(targetCard);
 
-      this.addLog(`🛒 BUY SUCCESS: [${sequenceSummary}] = ${total}. Acquired ${marketCard.label} (🎯 ${marketCard.target}) into hand! (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'success');
-      this.checkFinalAttackTrigger();
-      return { success: true, targetMatched: true, acquiredCard: marketCard, total };
+        this.addLog(`💎 TREASURE CLAIMED: [${sequenceSummary}] = ${total}. Claimed ${targetCard.label} (🎯 ${targetCard.target}, +${targetCard.gems} 💎)! Total: ${this.totalGems} 💎. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'treasure');
+        this.checkFinalAttackTrigger();
+        return { success: true, targetMatched: true, targetType: 'stockpile', acquiredCard: targetCard, total };
+      } else {
+        // Buy number card from market -> into hand
+        this.market[targetIndex] = null;
+        this.hand.push(targetCard);
+
+        this.addLog(`🛒 BUY SUCCESS: [${sequenceSummary}] = ${total}. Acquired ${targetCard.label} (🎯 ${targetCard.target}) into hand! (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'success');
+        this.checkFinalAttackTrigger();
+        return { success: true, targetMatched: true, targetType: 'market', acquiredCard: targetCard, total };
+      }
     } else {
-      this.addLog(`❌ BUY FAILED: [${sequenceSummary}] = ${total}. Needed 🎯 ${marketCard.target}. Card not acquired. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'warning');
+      const typeDesc = targetType === 'stockpile' ? 'Treasure target' : 'Market card target';
+      this.addLog(`❌ BUY FAILED: [${sequenceSummary}] = ${total}. Needed ${typeDesc} 🎯 ${targetCard.target}. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'warning');
       this.checkFinalAttackTrigger();
-      return { success: true, targetMatched: false, total };
+      return { success: true, targetMatched: false, targetType, total };
     }
   }
 
   /**
    * ACTION 3: Market Refresh
-   * In v0.5, Market Refresh is an intrinsic action (always available unless in Final Attack).
+   * Replaces the 5 market cards with fresh number cards from draw pile.
    */
   playMarketRefresh() {
     if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
     if (this.isFinalAttack) return { success: false, reason: 'Final Attack active! No other actions are available.' };
 
-    // Discard all remaining market cards to draw discard
     for (const card of this.market) {
       if (card) {
         this.drawDiscard.push(card);
       }
     }
 
-    // Deal 5 fresh cards
     this.initMarket();
-
-    // Adds 1 Doom counter
     this.addDoomCard();
 
     this.addLog(`🔄 MARKET REFRESH: Dealt 5 new cards to market. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'info');
@@ -310,7 +350,6 @@ export class GameState {
 
   /**
    * ACTION 4: Pickup
-   * In v0.5, Pickup is an intrinsic action (always available unless in Final Attack).
    * Returns all played number cards in player discard back to hand.
    */
   playPickup() {
@@ -321,7 +360,6 @@ export class GameState {
     this.hand.push(...this.playerDiscard);
     this.playerDiscard = [];
 
-    // Adds 1 Doom counter
     this.addDoomCard();
 
     this.addLog(`✋ PICKUP: Retrieved ${returnedCount} cards from discard back to hand. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'info');
@@ -341,12 +379,9 @@ export class GameState {
     if (this.currentMonster) {
       this.drawDiscard.push(...this.doomCards);
       this.doomCards = [];
-      this.currentMonsterIndex++;
-      if (this.currentMonsterIndex >= this.monstersList.length) {
-        this.status = 'won';
-        this.statusMessage = 'Victory! All monsters defeated (via test skip).';
-      }
-      this.addLog(`[Debug] Skipped to monster ${this.currentMonster ? this.currentMonster.name : 'End'}.`, 'system');
+      const isFinalMonster = (this.currentMonsterIndex === this.monstersList.length - 1);
+      this.handleMonsterDefeat(isFinalMonster, this.currentMonster);
+      this.addLog(`[Debug] Skipped monster.`, 'system');
     }
   }
 
@@ -376,5 +411,12 @@ export class GameState {
     };
     this.hand.push(card);
     this.addLog(`[Debug] Added card ${card.label} to hand.`, 'system');
+  }
+
+  debugRevealTreasure() {
+    const t = this.revealTreasureToStockpile();
+    if (!t) {
+      this.addLog('[Debug] Treasure deck is empty.', 'system');
+    }
   }
 }

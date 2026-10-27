@@ -908,3 +908,88 @@ body {
   padding: 8px 0;
 }
 
+/* --- Treasure Experiment Styles --- */
+
+.stat-pill.treasure-pill {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+  font-weight: 700;
+}
+
+.market-card.treasure-card {
+  background: #fffdf5;
+  border-color: #fcd34d;
+}
+
+.market-card.treasure-card:hover {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.card-op-badge.treasure-badge {
+  font-size: 1.15rem;
+  letter-spacing: -2px;
+  line-height: 1.2;
+}
+
+.card-type-sub.treasure-type {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.card-target-badge.neg-target {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.log-entry.log-treasure {
+  color: #b45309;
+  font-weight: 700;
+  background: #fffbeb;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border-left: 3px solid #f59e0b;
+}
+
+/* Treasure Chest Panel on LHS bottom */
+.treasure-panel {
+  border-left: 4px solid #f59e0b;
+  background: #fffdf7;
+}
+
+.treasure-collected-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 38px;
+  align-items: center;
+}
+
+.treasure-chest-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1.5px solid #fcd34d;
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.1);
+}
+
+.treasure-chest-item .t-gems {
+  font-size: 0.95rem;
+  letter-spacing: -1px;
+}
+
+.treasure-chest-item .t-target {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+

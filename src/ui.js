@@ -46,6 +46,11 @@ export class GameUI {
     this.statDiscardCount = document.getElementById('stat-discard-count');
     this.statPlayerDiscardCount = document.getElementById('stat-player-discard-count');
     this.statHandCount = document.getElementById('stat-hand-count');
+    this.statGemCount = document.getElementById('stat-gem-count');
+
+    // Treasure Chest (LHS bottom)
+    this.treasureGemsTotalEl = document.getElementById('treasure-gems-total');
+    this.treasureCollectedListEl = document.getElementById('treasure-collected-list');
 
     // Log & Status
     this.gameLogEl = document.getElementById('game-log');
@@ -279,18 +284,22 @@ export class GameUI {
         const isSelected = (this.selectedMarketIndex === idx);
         const isMatched = (this.selectedSequence.length > 0 && calc.total === card.target);
 
+        const isTreasure = (card.type === 'treasure');
         if (isSelected) slotEl.classList.add('selected');
         if (isMatched && !isFinalAttack) slotEl.classList.add('matched');
+        if (isTreasure) slotEl.classList.add('treasure-card');
 
         let matchBadge = '';
         if (isMatched && !isFinalAttack) {
-          matchBadge = `<div class="card-match-indicator">✨ MATCH! (Click to Buy)</div>`;
+          matchBadge = `<div class="card-match-indicator">✨ MATCH! (Click to ${isTreasure ? 'Collect' : 'Buy'})</div>`;
         }
 
+        const typeLabel = isTreasure ? `${card.gems} Gem${card.gems > 1 ? 's' : ''}` : 'Number';
+
         slotEl.innerHTML = `
-          <div class="card-op-badge">${card.label}</div>
-          <div class="card-target-badge">🎯 Target: ${card.target}</div>
-          <div class="card-type-sub">Number</div>
+          <div class="card-op-badge ${isTreasure ? 'treasure-badge' : ''}">${card.label}</div>
+          <div class="card-target-badge ${card.target < 0 ? 'neg-target' : ''}">🎯 Target: ${card.target}</div>
+          <div class="card-type-sub ${isTreasure ? 'treasure-type' : ''}">${typeLabel}</div>
           ${matchBadge}
         `;
         slotEl.addEventListener('click', () => this.selectMarketCard(idx));
@@ -336,7 +345,8 @@ export class GameUI {
       comparisonText += `<span class="badge-match monster">${alertLabel}</span> `;
     }
     if (selectedMarketCard && calc.total === selectedMarketCard.target && !isFinalAttack) {
-      comparisonText += `<span class="badge-match market">🛒 Matches Market Card (${selectedMarketCard.label}, 🎯 ${selectedMarketCard.target})! Ready to Buy!</span> `;
+      const typeLabel = selectedMarketCard.type === 'treasure' ? 'Treasure' : 'Market Card';
+      comparisonText += `<span class="badge-match market">🛒 Matches ${typeLabel} (${selectedMarketCard.label}, 🎯 ${selectedMarketCard.target})! Ready to Buy!</span> `;
     }
     if (!comparisonText && this.selectedSequence.length > 0) {
       const targets = [];
@@ -432,8 +442,10 @@ export class GameUI {
 
       this.btnBuy.classList.remove('locked-action');
       if (targetCard) {
-        this.btnBuy.querySelector('.btn-title').textContent = matchesMarket ? `🛒 Buy ${targetCard.label} (🎯 Matched!)` : `🛒 Buy ${targetCard.label}`;
-        this.btnBuy.querySelector('.btn-sub').textContent = matchesMarket ? 'Ready to acquire into hand!' : `Target is 🎯 ${targetCard.target}`;
+        const isTreasure = targetCard.type === 'treasure';
+        const cardTitle = isTreasure ? `Treasure (${targetCard.label})` : targetCard.label;
+        this.btnBuy.querySelector('.btn-title').textContent = matchesMarket ? `🛒 Buy ${cardTitle} (🎯 Matched!)` : `🛒 Buy ${cardTitle}`;
+        this.btnBuy.querySelector('.btn-sub').textContent = matchesMarket ? (isTreasure ? `Acquire +${targetCard.gems} 💎 to Treasure Chest!` : 'Ready to acquire into hand!') : `Target is 🎯 ${targetCard.target}`;
       } else {
         this.btnBuy.querySelector('.btn-title').textContent = '🛒 Buy';
         this.btnBuy.querySelector('.btn-sub').textContent = 'Hit selected card 🎯 to gain it';
@@ -460,8 +472,31 @@ export class GameUI {
     this.statDiscardCount.textContent = g.drawDiscard.length;
     this.statPlayerDiscardCount.textContent = g.playerDiscard.length;
     this.statHandCount.textContent = g.hand.length;
+    if (this.statGemCount) this.statGemCount.textContent = g.totalGems;
 
-    // 7. Status & Final Attack Banners
+    // 7. Treasure Chest (LHS bottom)
+    if (this.treasureGemsTotalEl) {
+      this.treasureGemsTotalEl.textContent = `${g.totalGems} 💎`;
+    }
+    if (this.treasureCollectedListEl) {
+      this.treasureCollectedListEl.innerHTML = '';
+      if (g.treasureChest.length === 0) {
+        this.treasureCollectedListEl.innerHTML = '<span class="placeholder-sm">No treasure collected yet. Match treasure targets in the market to collect gems!</span>';
+      } else {
+        g.treasureChest.forEach(t => {
+          const itemEl = document.createElement('div');
+          itemEl.className = 'treasure-chest-item';
+          itemEl.title = `${t.category} target (${t.target})`;
+          itemEl.innerHTML = `
+            <span class="t-gems">${t.label}</span>
+            <span class="t-target">🎯 ${t.target}</span>
+          `;
+          this.treasureCollectedListEl.appendChild(itemEl);
+        });
+      }
+    }
+
+    // 8. Status & Final Attack Banners
     if (isFinalAttack && g.status === 'in_progress') {
       this.finalAttackBannerEl.classList.remove('hidden');
       this.faTargetNumEl.textContent = monster?.target ?? '';
@@ -471,11 +506,11 @@ export class GameUI {
 
     if (g.status === 'won') {
       this.gameBannerEl.className = 'status-banner victory';
-      this.gameBannerEl.innerHTML = `🏆 <strong>VICTORY!</strong> All monsters defeated! <button id="btn-banner-restart">Play Again</button>`;
+      this.gameBannerEl.innerHTML = `🏆 <strong>VICTORY!</strong> All monsters defeated! Final Score: <strong>💎 ${g.totalGems} Gems</strong> (${g.treasureChest.length} treasures) <button id="btn-banner-restart">Play Again</button>`;
       document.getElementById('btn-banner-restart')?.addEventListener('click', () => this.btnRestart.click());
     } else if (g.status === 'lost') {
       this.gameBannerEl.className = 'status-banner gameover';
-      this.gameBannerEl.innerHTML = `☠️ <strong>DEFEAT:</strong> ${g.statusMessage} <button id="btn-banner-restart">Try Again</button>`;
+      this.gameBannerEl.innerHTML = `☠️ <strong>DEFEAT:</strong> ${g.statusMessage} (Score: 💎 ${g.totalGems} Gems) <button id="btn-banner-restart">Try Again</button>`;
       document.getElementById('btn-banner-restart')?.addEventListener('click', () => this.btnRestart.click());
     } else {
       this.gameBannerEl.className = 'status-banner hidden';

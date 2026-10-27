@@ -1,6 +1,6 @@
 # Maths Handbuilder WIP
 
-**Game Design Document | v0.5**
+**Game Design Document | v0.6**
 
 *A roguelike handbuilding game where maths is your weapon.*
 
@@ -8,7 +8,7 @@
 
 Defeat a sequence of monsters by combining cards to make exact target numbers.
 
-Build a powerful hand, discover clever mathematical combinations, and prepare for increasingly dangerous monsters.
+Build a powerful hand, collect treasure, and unlock new content across multiple games.
 
 **Design principles**
 
@@ -27,7 +27,7 @@ Four actions are available:
 | Action | Effect |
 |---|---|
 | **Attack** | Make the monster's 🎯 target to defeat it. |
-| **Buy** | Make a market card's 🎯 target to add it to your hand. |
+| **Buy** | Make a market card's 🎯 target to add it to your hand, or claim a treasure by making its target. |
 | **Market Refresh** | Replace the market with five new cards. |
 | **Pickup** | Return all played cards to your hand. |
 
@@ -69,6 +69,8 @@ Face-down cards drawn from the draw pile track accumulated Doom.
 
 A successful Attack defeats the monster. Remove its Doom cards and reveal the next monster with zero Doom.
 
+Defeating a monster also reveals a random treasure, as described in section 6.
+
 ### Final Attack
 
 When Doom reaches the monster's limit, the player gets one final Attack.
@@ -90,7 +92,7 @@ When Doom reaches the monster's limit, the player gets one final Attack.
 
 ## 5. The market
 
-Five random cards from the draw pile are displayed face-up.
+Five random number cards from the draw pile are displayed face-up.
 
 Each card has a 🎯 target equal to its numerical value, regardless of its operation.
 
@@ -104,7 +106,62 @@ Players acquire one card per Buy action by making its target exactly.
 
 Purchased cards enter the player's hand immediately. Their market slots remain empty until Market Refresh is played.
 
-## 6. Draw pile distribution
+## 6. Treasure and gems
+
+Treasure cards form a separate deck.
+
+Each treasure displays a 🎯 target and a gem reward.
+
+### Revealing treasure
+
+Defeating a monster reveals one random treasure card.
+
+- After monsters 1–5, place the treasure face-up in the **treasure stockpile**.
+- Unclaimed treasures remain in the stockpile until the end of the run.
+- The stockpile can contain multiple treasures.
+
+### Claiming treasure
+
+Use the Buy action to make a treasure's target exactly.
+
+- Collect the gems shown on the treasure.
+- Remove the claimed treasure from the stockpile.
+- Discard the number cards used and add one Doom, as with any action.
+
+### Final monster reward
+
+Defeating the final monster reveals one random treasure.
+
+**Collect its gems automatically and win the game.**
+
+### Keeping gems
+
+Gems are permanent rewards. Players keep all gems collected during a run, even if they lose.
+
+## 7. Legacy progression
+
+Gems unlock new content across multiple games.
+
+Locked content is arranged in a fixed sequence of cards, with the next unlock's requirements displayed on its back.
+
+1. Earn gems by claiming treasure or defeating the final monster.
+2. Mark the corresponding gem checkboxes on the next locked card.
+3. When all requirements are complete, flip the card to reveal the reward.
+4. Add the unlocked content to future games and reveal the next unlock.
+
+Unlocked content may include:
+
+- New mathematical cards.
+- Alternative starting hands.
+- Additional monsters.
+- New actions.
+- Rule variations.
+
+The progression is permanent, with players marking their unlocks directly on the cards.
+
+Some unlocks may require a second type of currency.
+
+## 8. Draw pile distribution
 
 The draw pile favours smaller additions and accessible operations, with powerful multipliers appearing less frequently.
 
@@ -121,42 +178,55 @@ The three starting cards are separate from this draw pile.
 
 The draw pile supplies market cards and face-down Doom counters. When the draw pile runs out, its discarded cards are reshuffled to form a new draw pile.
 
-## 7. Strategy and progression
+Treasure cards are kept in a separate deck.
 
-The player balances two goals:
+## 9. Strategy and progression
 
-**Survive:** Find the right calculations to defeat each monster before Doom runs out.
+Players balance three goals:
 
-**Grow stronger:** Acquire cards and improve the hand to tackle increasingly difficult targets.
+**Survive:** Make the calculations needed to defeat each monster before Doom runs out.
 
-Early monsters have generous Doom limits, allowing players to invest actions in improving their hands. Later monsters demand more powerful combinations and efficient play.
+**Grow stronger:** Acquire number cards to create more mathematical possibilities.
 
-Every purchase costs one Doom, creating a trade-off between growing stronger and surviving the current monster.
+**Collect treasure:** Spend actions on treasure targets to earn gems and unlock permanent rewards.
 
-## 8. Winning
+Early monsters offer more opportunities to build a hand and collect treasure. Later monsters demand more efficient play.
+
+## 10. Winning
 
 Defeat every monster in the sequence to win.
 
-## 9. Future possibilities
+Reveal the final treasure and collect its gems as a victory bonus.
 
-Potential additions outside the initial prototype:
+All gems earned during the game contribute to permanent legacy progression, whether the player wins or loses.
 
-- Additional actions and unlockable abilities.
-- Division and other mathematical operations.
-- Alternative monster sequences and difficulty levels.
+## 11. Future possibilities
+
+- Additional mathematical operations, including division.
+- New monster sequences and difficulty levels.
+- Additional unlockable abilities and rule variations.
 
 ---
 
-## 10. Version history
+## 12. Version history
+
+### v0.6
+
+**Changes from v0.5:**
+
+1. **Separate treasure deck.** Treasure cards no longer occupy market slots.
+2. **Treasure stockpile.** Defeating each monster except the final monster adds one random treasure to a separate stockpile.
+3. **Treasure targets.** Players claim treasures using the Buy action, matching their targets exactly to earn gems.
+4. **Permanent gems.** Gems are retained between games, including after defeat.
+5. **Final victory reward.** Defeating the final monster awards one random treasure automatically.
+6. **Linear legacy progression.** Gems fill checkboxes on a sequence of mystery unlock cards, revealing new content such as starting hands, monsters, actions and rules. Some unlocks may require a second currency.
 
 ### v0.5
 
-**Changes from v0.4:**
-
-1. **Actions are always available.** Attack, Buy, Market Refresh and Pickup are now actions rather than cards. Players no longer need to recover an action card before using that action again.
-2. **Starting hand simplified.** Players begin with +1, +2 and +3, rather than seven cards containing four action cards.
-3. **Buy cards removed from the draw pile.** The five Buy cards have been removed, reducing the draw pile from 71 to 66 cards.
-4. **Final Attack introduced.** When Doom reaches a monster's limit, the player may make one final Attack. A success advances to the next monster; a failure ends the game. No other actions are available during this final chance.
+1. **Actions are always available.** Attack, Buy, Market Refresh and Pickup became actions rather than cards.
+2. **Starting hand simplified.** Players begin with +1, +2 and +3.
+3. **Buy cards removed.** The draw pile was reduced from 71 to 66 cards.
+4. **Final Attack introduced.** Players get one final Attack when Doom reaches its limit.
 
 ### v0.4
 

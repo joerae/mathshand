@@ -40,6 +40,14 @@ All balance, card distributions, starting hand compositions, and monster progres
   - `target`: The exact target number required to defeat the monster (positive or negative).
   - `doomLimit`: Number of actions before the final chance.
 
+### 3. `data/treasures.js` (Treasure Experiment)
+- **`TREASURE_CARDS`**: Isolated treasure cards (~1/4 of total deck):
+  - **Negative targets** (e.g. -2, -3, -4, -6, -8, -10, -12)
+  - **Square targets** (e.g. 4, 9, 16, 25, 36, 49, 64, 81)
+  - **Highly composite targets** (e.g. 6, 12, 18, 24, 30, 36, 48, 60)
+  - **Gems**: 1, 2, or 3 gems (💎) depending on target difficulty.
+  - Acquired treasures move to your Treasure Chest score area rather than your hand.
+
 ---
 
 ## 🎮 How to Play the Prototype (v0.5 Rules)
