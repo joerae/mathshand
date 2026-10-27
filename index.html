@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maths Handbuilder - Playable Rules Prototype (v0.5)</title>
+  <title>Maths Handbuilder - Playable Rules Prototype (v0.6)</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
       </div>
 
       <div class="deck-stats">
-        <div class="stat-pill" title="Cards remaining in the 70-card draw deck">
+        <div class="stat-pill" title="Cards remaining in the 66-card draw deck">
           Draw Pile: <strong id="stat-draw-count">0</strong>
         </div>
         <div class="stat-pill" title="Reshuffle pile (spent doom counters & refreshed market cards)">
@@ -28,8 +28,8 @@
         <div class="stat-pill" title="Number cards currently in your hand">
           Hand: <strong id="stat-hand-count">0</strong>
         </div>
-        <div class="stat-pill treasure-pill" title="Total gems collected from treasure cards">
-          Treasure: <strong>💎 <span id="stat-gem-count">0</span></strong>
+        <div class="stat-pill treasure-pill" title="Gems in current run and permanent legacy stash">
+          Run: <strong>💎 <span id="stat-gem-count">0</span></strong> | Stash: <strong>💎 <span id="stat-stash-count">0</span></strong>
         </div>
         <button id="btn-restart" class="btn-secondary" title="Reset game to starting state">🔄 Restart</button>
       </div>
@@ -130,7 +130,7 @@
         <div class="panel treasure-panel">
           <div class="panel-header">
             <span class="panel-tag">TREASURE CHEST</span>
-            <span class="panel-hint">Total: <strong id="treasure-gems-total">0 💎</strong></span>
+            <span class="panel-hint">Run: <strong id="treasure-gems-run">0 💎</strong> • Permanent Stash: <strong id="treasure-gems-stash">0 💎</strong></span>
           </div>
 
           <div id="treasure-collected-list" class="treasure-collected-row">

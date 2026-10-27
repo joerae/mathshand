@@ -24,7 +24,7 @@ export class GameState {
     this.monstersList = JSON.parse(JSON.stringify(this.monsters));
     this.currentMonsterIndex = 0;
     
-    // Number Draw Deck & Piles (70 cards)
+    // Number Draw Deck & Piles (66 cards)
     this.drawPile = shuffle(buildDrawPile());
     this.drawDiscard = [];     // Discarded doom cards and refreshed market cards
     this.doomCards = [];       // Face-down cards on the current monster
@@ -33,6 +33,7 @@ export class GameState {
     this.treasureDeck = shuffle(buildTreasureDeck());
     this.treasureStockpile = []; // Revealed treasures available to claim (starts empty)
     this.treasureChest = [];     // Claimed treasures / gems
+    this.victoryTreasure = null; // Bonus treasure awarded upon defeating monster 6
     
     // Player Hand & Discard (Only contains number cards)
     this.hand = JSON.parse(JSON.stringify(STARTING_HAND)); // +1, +2, +3
@@ -61,6 +62,38 @@ export class GameState {
 
   get totalGems() {
     return this.treasureChest.reduce((sum, t) => sum + (t.gems || 0), 0);
+  }
+
+  /**
+   * Retrieves permanent legacy gems persisted in browser storage.
+   */
+  static getPermanentGems() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const val = localStorage.getItem('maths_handbuilder_permanent_gems');
+        return val ? parseInt(val, 10) || 0 : 0;
+      }
+    } catch (e) {
+      // Storage unavailable or disabled
+    }
+    return 0;
+  }
+
+  /**
+   * Adds gems to permanent legacy stash in browser storage.
+   */
+  static addPermanentGems(count) {
+    try {
+      if (typeof localStorage !== 'undefined' && count > 0) {
+        const current = GameState.getPermanentGems();
+        const updated = current + count;
+        localStorage.setItem('maths_handbuilder_permanent_gems', updated.toString());
+        return updated;
+      }
+    } catch (e) {
+      // Storage unavailable or disabled
+    }
+    return 0;
   }
 
   /**
@@ -260,7 +293,9 @@ export class GameState {
       const victoryTreasure = this.drawTreasureCard();
       if (victoryTreasure) {
         this.treasureChest.push(victoryTreasure);
+        GameState.addPermanentGems(victoryTreasure.gems);
       }
+      this.victoryTreasure = victoryTreasure;
       this.status = 'won';
       this.statusMessage = 'Victory! All monsters defeated!';
       this.addLog(`🏆 VICTORY: All monsters defeated! Final victory bonus: ${victoryTreasure ? `${victoryTreasure.label} (+${victoryTreasure.gems} 💎)` : 'None'}. Total gems earned: ${this.totalGems} 💎!`, 'victory');
@@ -305,6 +340,7 @@ export class GameState {
         // Claim treasure from stockpile -> into treasure chest
         this.treasureStockpile.splice(targetIndex, 1);
         this.treasureChest.push(targetCard);
+        GameState.addPermanentGems(targetCard.gems);
 
         this.addLog(`💎 TREASURE CLAIMED: [${sequenceSummary}] = ${total}. Claimed ${targetCard.label} (🎯 ${targetCard.target}, +${targetCard.gems} 💎)! Total: ${this.totalGems} 💎. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'treasure');
         this.checkFinalAttackTrigger();

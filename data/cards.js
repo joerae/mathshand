@@ -3,7 +3,7 @@
  * 
  * In v0.6:
  * - Starting hand contains 3 cards: +1, +2, +3
- * - Draw pile supplies market cards and Doom counters (70 number cards)
+ * - Draw pile supplies market cards and Doom counters (66 number cards)
  * - Treasure cards are kept in a separate deck (data/treasures.js)
  */
 
@@ -23,7 +23,7 @@ export const STARTING_HAND = [
 ];
 
 /**
- * Draw pile distribution definition (70 cards total as per Section 8).
+ * Draw pile distribution definition (66 cards total as per Section 8).
  * All cards in the draw pile are number cards.
  */
 export const DRAW_PILE_DISTRIBUTION = [
@@ -33,8 +33,8 @@ export const DRAW_PILE_DISTRIBUTION = [
   // +5 to +9: 3 copies each (15 cards)
   { op: '+', min: 5, max: 9, copies: 3 },
 
-  // −1 to −4: 4 copies each (16 cards)
-  { op: '-', min: 1, max: 4, copies: 4 },
+  // −1 to −4: 3 copies each (12 cards)
+  { op: '-', min: 1, max: 4, copies: 3 },
 
   // ×2 to ×4: 3 copies each (9 cards)
   { op: '×', min: 2, max: 4, copies: 3 },
