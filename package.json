@@ -1,0 +1,13 @@
+{
+  "name": "maths-handbuilder-prototype",
+  "version": "0.4.0",
+  "description": "Playable rules prototype for Maths Handbuilder card game",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/test_game.js"
+  },
+  "author": "",
+  "license": "MIT"
+}

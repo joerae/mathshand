@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maths Handbuilder - Playable Rules Prototype (v0.5)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header / Stats Bar -->
+    <header class="top-bar">
+      <div class="title-group">
+        <h1>Maths Handbuilder</h1>
+        <span class="version-tag">Rules Prototype v0.5</span>
+      </div>
+
+      <div class="deck-stats">
+        <div class="stat-pill" title="Cards remaining in the 66-card draw deck">
+          Draw Pile: <strong id="stat-draw-count">0</strong>
+        </div>
+        <div class="stat-pill" title="Reshuffle pile (spent doom counters & refreshed market cards)">
+          Deck Discard: <strong id="stat-discard-count">0</strong>
+        </div>
+        <div class="stat-pill" title="Played number cards in your discard pile (recovered with Pickup)">
+          Player Discard: <strong id="stat-player-discard-count">0</strong>
+        </div>
+        <div class="stat-pill" title="Number cards currently in your hand">
+          Hand: <strong id="stat-hand-count">0</strong>
+        </div>
+        <button id="btn-restart" class="btn-secondary" title="Reset game to starting state">🔄 Restart</button>
+      </div>
+    </header>
+
+    <!-- Game Status Banner (Victory / Defeat) -->
+    <div id="game-status-banner" class="status-banner hidden"></div>
+
+    <!-- Final Attack Urgent Alert Banner -->
+    <div id="final-attack-banner" class="final-attack-banner hidden">
+      <div class="fa-icon">🚨</div>
+      <div class="fa-text">
+        <strong>FINAL ATTACK CHANCE!</strong> Doom limit reached. You get one final Attack to hit 🎯 <span id="fa-target-num">10</span>. No other actions are available. A miss ends the game!
+      </div>
+    </div>
+
+    <!-- Main Game Board Grid -->
+    <main class="board-grid">
+      <!-- LEFT COLUMN: Monster > Your Hand > Actions -->
+      <section class="left-col">
+        <!-- 1. Current Monster Card -->
+        <div class="panel monster-panel">
+          <div class="panel-header">
+            <span class="panel-tag">CURRENT ENEMY</span>
+            <h2 id="monster-name">Monster 1/6</h2>
+          </div>
+
+          <div class="monster-content">
+            <div class="monster-target-box">
+              <span class="target-label">🎯 TARGET</span>
+              <span id="monster-target" class="target-number">10</span>
+            </div>
+
+            <div class="monster-doom-box">
+              <div class="doom-header">
+                <span class="doom-label">☠ DOOM</span>
+                <span id="monster-doom" class="doom-count">0 / 6</span>
+              </div>
+              <div id="monster-doom-bar" class="doom-pips"></div>
+              <div class="doom-help">Each action adds 1 Doom. Reaching limit activates your one Final Attack!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Player Hand -->
+        <div class="panel hand-panel">
+          <div class="panel-header">
+            <span class="panel-tag">YOUR HAND</span>
+            <span class="panel-hint">Click number cards to chain in played order</span>
+          </div>
+
+          <div id="hand-number-cards" class="cards-flex-row">
+            <!-- Number cards injected dynamically -->
+          </div>
+
+          <!-- Discard preview -->
+          <div id="discard-preview-section" class="discard-preview-box">
+            <div class="discard-preview-header">
+              <span>Played Discard Pile (<span id="discard-preview-count">0</span> cards):</span>
+              <small>Play <strong>✋ Pickup</strong> to return all to hand</small>
+            </div>
+            <div id="discard-preview-cards" class="cards-flex-row mini-cards">
+              <!-- Cards in discard injected dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Actions Panel -->
+        <div class="panel actions-panel">
+          <div class="panel-header">
+            <span class="panel-tag">ACTIONS (Costs 1 Doom)</span>
+          </div>
+
+          <div class="action-buttons-grid">
+            <button id="btn-action-attack" class="action-btn btn-attack">
+              <div class="btn-title">⚔️ Attack</div>
+              <div class="btn-sub">Hit Monster 🎯 with selected cards</div>
+            </button>
+
+            <button id="btn-action-buy" class="action-btn btn-buy">
+              <div class="btn-title">🛒 Buy</div>
+              <div class="btn-sub">Hit selected Market card 🎯 to gain it</div>
+            </button>
+
+            <button id="btn-action-refresh" class="action-btn btn-refresh">
+              <div class="btn-title">🔄 Market Refresh</div>
+              <div class="btn-sub">Discard market & deal 5 new cards</div>
+            </button>
+
+            <button id="btn-action-pickup" class="action-btn btn-pickup">
+              <div class="btn-title">✋ Pickup (0)</div>
+              <div class="btn-sub">Return all discarded cards to hand</div>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Market > Calc > Log > Rules -->
+      <section class="right-col">
+        <!-- 1. Market -->
+        <div class="panel market-panel">
+          <div class="panel-header">
+            <span class="panel-tag">MARKET (5 SLOTS)</span>
+            <span class="panel-hint">Match target to acquire with <strong>Buy</strong></span>
+          </div>
+
+          <div id="market-slots" class="market-slots-grid">
+            <!-- Market cards injected here -->
+          </div>
+        </div>
+
+        <!-- 2. Calculation Workbench (Calc) -->
+        <div class="panel workbench-panel">
+          <div class="panel-header">
+            <span class="panel-tag">CALCULATION WORKBENCH</span>
+            <button id="btn-clear-seq" class="btn-text">✕ Clear Selection</button>
+          </div>
+
+          <div class="formula-box">
+            <div id="formula-chain" class="formula-chain">
+              <!-- Tokens injected here -->
+            </div>
+            <div class="formula-result">
+              <span class="result-label">Total:</span>
+              <span id="running-total" class="result-value">0</span>
+            </div>
+          </div>
+
+          <div id="formula-comparison" class="formula-comparison">
+            <!-- Match/mismatch alerts injected here -->
+          </div>
+        </div>
+
+        <!-- 3. Combat & Action Log -->
+        <div class="panel log-panel">
+          <div class="panel-header">
+            <span class="panel-tag">COMBAT & ACTION LOG</span>
+          </div>
+          <div id="game-log" class="log-stream"></div>
+        </div>
+
+        <!-- 4. Rules Tuning & Debug Tools -->
+        <details class="panel debug-panel">
+          <summary class="panel-tag debug-summary">⚙️ Rules Tuning & Debug Tools (Click to expand)</summary>
+          <div class="debug-controls-grid">
+            <div class="debug-group">
+              <label>Monster Navigation:</label>
+              <button id="debug-skip-monster" class="btn-sm">Skip Monster ⏭</button>
+            </div>
+            <div class="debug-group">
+              <label>Doom Adjustment:</label>
+              <button id="debug-add-doom" class="btn-sm">+1 Doom</button>
+              <button id="debug-sub-doom" class="btn-sm">-1 Doom</button>
+            </div>
+            <div class="debug-group debug-add-card">
+              <label>Spawn Card into Hand:</label>
+              <div class="debug-inline">
+                <select id="debug-card-op">
+                  <option value="+">+</option>
+                  <option value="-">−</option>
+                  <option value="×">×</option>
+                </select>
+                <input type="number" id="debug-card-val" value="5" min="1" max="99" style="width: 55px;">
+                <button id="debug-add-card-btn" class="btn-sm">+ Add to Hand</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="src/ui.js"></script>
+</body>
+</html>
