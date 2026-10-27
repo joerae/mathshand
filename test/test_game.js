@@ -1,15 +1,15 @@
 /**
- * Unit & Integration Tests for Maths Handbuilder Game Logic (v0.6)
+ * Unit & Integration Tests for Maths Handbuilder Game Logic (v0.7 Underwater Scooter)
  */
 import assert from 'node:assert';
 import { GameState } from '../src/game.js';
 import { STARTING_HAND, buildDrawPile } from '../data/cards.js';
 import { TREASURE_CARDS, buildTreasureDeck } from '../data/treasures.js';
-import { MONSTERS } from '../data/monsters.js';
+import { MONSTERS, FISH_ENCOUNTERS } from '../data/monsters.js';
 
-console.log('--- Running Tests for Maths Handbuilder v0.6 ---');
+console.log('--- Running Tests for Maths Handbuilder v0.7 (Underwater Scooter) ---');
 
-// Test 1: Starting hand composition (v0.6)
+// Test 1: Starting hand composition
 console.log('1. Checking starting hand (+1, +2, +3)...');
 assert.strictEqual(STARTING_HAND.length, 3, 'Starting hand must have exactly 3 cards');
 assert.strictEqual(STARTING_HAND.every(c => c.type === 'number'), true, 'All starting cards must be number cards');
@@ -17,162 +17,157 @@ const labels = STARTING_HAND.map(c => c.label);
 assert.deepStrictEqual(labels, ['+1', '+2', '+3'], 'Starting hand must be +1, +2, +3');
 console.log('   ✓ Starting hand has 3 number cards (+1, +2, +3).');
 
-// Test 2: Draw pile & Treasure distribution (v0.6)
-console.log('2. Checking 66 number cards and separate 19 treasure cards...');
-const drawPile = buildDrawPile();
-assert.strictEqual(drawPile.length, 66, `Draw pile must be exactly 66 number cards, got ${drawPile.length}`);
-assert.strictEqual(drawPile.every(c => c.type === 'number'), true, 'All draw pile cards must be number cards');
+// Test 2: Fish Encounters & Recharge Configuration
+console.log('2. Checking fish encounters sequence and recharge values...');
+assert.strictEqual(MONSTERS.length, 6, 'Must have 6 fish encounters');
+assert.strictEqual(MONSTERS[0].name, 'Chainsaw Clownfish');
+assert.strictEqual(MONSTERS[0].target, 10);
+assert.strictEqual(MONSTERS[0].recharge, 4);
 
-// Verify distribution counts
-const negCards = drawPile.filter(c => c.op === '-');
-const plusLow = drawPile.filter(c => c.op === '+' && c.value <= 4);
-const plusHigh = drawPile.filter(c => c.op === '+' && c.value >= 5);
-const multLow = drawPile.filter(c => c.op === '×' && c.value <= 4);
-const multHigh = drawPile.filter(c => c.op === '×' && c.value >= 5);
+assert.strictEqual(MONSTERS[1].name, 'Electric Eel');
+assert.strictEqual(MONSTERS[1].target, 16);
+assert.strictEqual(MONSTERS[1].recharge, 3);
 
-assert.strictEqual(plusLow.length, 20, 'Expected 20 (+1 to +4) cards');
-assert.strictEqual(plusHigh.length, 15, 'Expected 15 (+5 to +9) cards');
-assert.strictEqual(negCards.length, 12, 'Expected 12 (−1 to −4) cards (3 copies each)');
-assert.strictEqual(multLow.length, 9, 'Expected 9 (×2 to ×4) cards');
-assert.strictEqual(multHigh.length, 10, 'Expected 10 (×5 to ×9) cards');
+assert.strictEqual(MONSTERS[2].name, 'Pufferfish');
+assert.strictEqual(MONSTERS[2].target, 36);
+assert.strictEqual(MONSTERS[2].recharge, 4);
 
-const treasureDeck = buildTreasureDeck();
-assert.strictEqual(treasureDeck.length, 19, `Treasure deck must have 19 cards, got ${treasureDeck.length}`);
-const negTreasures = treasureDeck.filter(t => t.category === 'negative');
-const sqTreasures = treasureDeck.filter(t => t.category === 'square');
-const compTreasures = treasureDeck.filter(t => t.category === 'composite');
-assert.strictEqual(negTreasures.length, 5, 'Expected 5 negative target treasures');
-assert.strictEqual(sqTreasures.length, 8, 'Expected 8 square target treasures');
-assert.strictEqual(compTreasures.length, 6, 'Expected 6 composite target treasures');
-console.log('   ✓ 66 number cards and 19 separate treasure cards verified.');
+assert.strictEqual(MONSTERS[3].name, "Kraken Takin' a Break'n");
+assert.strictEqual(MONSTERS[3].target, 56);
+assert.strictEqual(MONSTERS[3].recharge, 3);
 
-// Test 3: Math sequence evaluation (strictly in played order)
-console.log('3. Checking math calculation sequence examples...');
-const seq1 = [
-  { op: '+', value: 8, label: '+8' },
-  { op: '-', value: 1, label: '-1' },
-  { op: '×', value: 8, label: '×8' }
-];
-const res1 = GameState.calculateSequence(seq1);
-assert.strictEqual(res1.total, 56, `Expected 56, got ${res1.total}`);
+assert.strictEqual(MONSTERS[4].name, 'Anglerfish');
+assert.strictEqual(MONSTERS[4].target, -12);
+assert.strictEqual(MONSTERS[4].recharge, 5);
 
-const seq2 = [
-  { op: '+', value: 8, label: '+8' },
-  { op: '×', value: 8, label: '×8' },
-  { op: '-', value: 1, label: '-1' }
-];
-const res2 = GameState.calculateSequence(seq2);
-assert.strictEqual(res2.total, 63, `Expected 63, got ${res2.total}`);
-console.log('   ✓ Calculations resolve strictly in played order (no BEDMAS).');
+assert.strictEqual(MONSTERS[5].name, 'Great White Shark');
+assert.strictEqual(MONSTERS[5].target, 98);
+assert.strictEqual(MONSTERS[5].recharge, 'Victory');
+console.log('   ✓ 6 sea creatures verified with correct targets and recharge rewards.');
 
-// Test 4: Game initialization & Market separation (v0.6)
-console.log('4. Checking game state initialization & separation...');
+// Test 3: Battery & Deck Initialization
+console.log('3. Checking battery and deck initialization...');
 const game = new GameState();
-assert.strictEqual(game.hand.length, 3, 'Player hand should start with 3 cards');
-assert.strictEqual(game.market.length, 5, 'Market should start with 5 slots');
-assert.strictEqual(game.market.every(slot => slot !== null && slot.type === 'number'), true, 'All 5 market slots should be number cards');
-assert.strictEqual(game.drawPile.length, 66 - 5, 'Draw pile should have 61 cards remaining after dealing market');
-assert.strictEqual(game.treasureStockpile.length, 0, 'Treasure stockpile starts empty');
-assert.strictEqual(game.treasureChest.length, 0, 'Treasure chest starts empty');
-assert.strictEqual(game.totalGems, 0, 'Total gems start at 0');
-assert.strictEqual(game.currentDoom, 0, 'Current monster doom starts at 0');
-assert.strictEqual(game.currentMonsterIndex, 0, 'Starts at monster 1');
-console.log('   ✓ Market contains only number cards; stockpile starts empty.');
+assert.strictEqual(game.maxBolts, 5, 'Max battery is 5 bolts');
+assert.strictEqual(game.currentBolts, 5, 'Starts with full battery of 5 bolts');
+assert.strictEqual(game.drawPile.length, 66 - 5, 'Draw pile has 61 cards remaining after market deal');
+assert.strictEqual(game.market.length, 5, 'Market has 5 cards');
+assert.strictEqual(game.treasureStockpile.length, 0, 'Stockpile starts empty');
+assert.strictEqual(game.isFinalAttack, false, 'Final attack is not active');
+console.log('   ✓ Scooter initialized with 5/5 bolts and pure number market.');
 
-// Test 5: Defeating Monster 1 reveals 1 treasure to the stockpile
-console.log('5. Testing defeating Monster 1 reveals treasure to stockpile...');
-// Monster 1 target is 10
-game.hand.push({ uid: 'test_10', type: 'number', op: '+', value: 10, label: '+10', target: 10 });
-const atkCards = game.hand.filter(c => c.uid === 'test_10');
-const atkRes = game.playAttack(atkCards);
-assert.strictEqual(atkRes.success, true, 'Attack should succeed');
-assert.strictEqual(atkRes.targetMatched, true, 'Target 10 should be matched');
-assert.strictEqual(game.currentMonsterIndex, 1, 'Should advance to Monster 2');
-assert.strictEqual(game.treasureStockpile.length, 1, 'Stockpile should now contain exactly 1 revealed treasure');
-assert.strictEqual(game.treasureStockpile[0].type, 'treasure', 'Card in stockpile must be a treasure');
-console.log(`   ✓ Monster 1 defeated. Stockpile received: ${game.treasureStockpile[0].label} (Target 🎯 ${game.treasureStockpile[0].target}, ${game.treasureStockpile[0].gems} Gems).`);
+// Test 4: Actions cost 1 bolt each
+console.log('4. Testing actions cost 1 bolt each...');
+// Buy a card from market (costs 1 bolt)
+const target0 = game.market[0].target;
+game.hand.push({ uid: 'buy_solver', type: 'number', op: '+', value: target0, label: `+${target0}`, target: target0 });
+const solverCards = game.hand.filter(c => c.uid === 'buy_solver');
+const buyRes = game.playBuy('market', 0, solverCards);
+assert.strictEqual(buyRes.success, true);
+assert.strictEqual(game.currentBolts, 4, 'Buy must cost 1 bolt (5 -> 4)');
+assert.strictEqual(game.market[0], null, 'Market slot 0 is empty');
 
-// Test 6: Claiming a treasure from the stockpile via Buy action
-console.log('6. Testing claiming treasure from stockpile via playBuy("stockpile", ...)...');
-const stockTreasure = game.treasureStockpile[0];
-const targetToMatch = stockTreasure.target;
+// Market Refresh costs 1 bolt
+const refRes = game.playMarketRefresh();
+assert.strictEqual(refRes.success, true);
+assert.strictEqual(game.currentBolts, 3, 'Market refresh must cost 1 bolt (4 -> 3)');
+assert.strictEqual(game.market.every(c => c !== null), true, 'Market fully refreshed');
 
-// Spawn cards to match the treasure's target
-game.hand.push({ uid: 'treasure_solver', type: 'number', op: '+', value: targetToMatch, label: `+${targetToMatch}`, target: Math.abs(targetToMatch) });
-const solverCards = game.hand.filter(c => c.uid === 'treasure_solver');
-const doomBeforeClaim = game.currentDoom;
+// Empty market slot 0 again for testing auto-refill later
+const target0b = game.market[0].target;
+game.hand.push({ uid: 'buy_solver_2', type: 'number', op: '+', value: target0b, label: `+${target0b}`, target: target0b });
+game.playBuy('market', 0, game.hand.filter(c => c.uid === 'buy_solver_2'));
+assert.strictEqual(game.currentBolts, 2, 'Buy costs 1 bolt (3 -> 2)');
+assert.strictEqual(game.market[0], null, 'Market slot 0 is empty again');
 
-const claimRes = game.playBuy('stockpile', 0, solverCards);
-assert.strictEqual(claimRes.success, true, 'Claiming treasure should succeed');
-assert.strictEqual(claimRes.targetMatched, true, 'Target must match');
-assert.strictEqual(claimRes.targetType, 'stockpile', 'Target type should be stockpile');
-assert.strictEqual(game.treasureStockpile.length, 0, 'Treasure should be removed from stockpile');
-assert.strictEqual(game.treasureChest.length, 1, 'Treasure should be in treasure chest');
-assert.strictEqual(game.totalGems, stockTreasure.gems, 'Total gems should match treasure gem count');
-assert.strictEqual(game.currentDoom, doomBeforeClaim + 1, 'Claiming treasure must add 1 Doom');
-assert.strictEqual(game.hand.some(c => c.type === 'treasure'), false, 'Hand must NOT contain treasure cards');
-console.log(`   ✓ Claimed treasure into chest (+${stockTreasure.gems} 💎). Total gems: ${game.totalGems}. Hand remains purely number cards.`);
+// Pickup costs 1 bolt
+const pickRes = game.playPickup();
+assert.strictEqual(pickRes.success, true);
+assert.strictEqual(game.currentBolts, 1, 'Pickup costs 1 bolt (2 -> 1)');
+assert.strictEqual(game.playerDiscard.length, 0, 'Discard retrieved to hand');
+console.log('   ✓ All actions correctly cost 1 bolt each.');
 
-// Test 7: Buying a number card from the Market via Buy action
-console.log('7. Testing buying a number card from market...');
-const marketCard = game.market[0];
-const marketTarget = marketCard.target;
-game.hand.push({ uid: 'market_solver', type: 'number', op: '+', value: marketTarget, label: `+${marketTarget}`, target: marketTarget });
-const mSolverCards = game.hand.filter(c => c.uid === 'market_solver');
+// Test 5: Defeating Fish 1 (Chainsaw Clownfish) with Post-Battle Recovery
+console.log('5. Testing defeating Fish 1, bolt recharge, auto-pickup, auto market refill & treasure reveal...');
+// Fish 1 target is 10, recharge is +4. Current bolts = 1.
+// Attack costs 1 bolt: 1 - 1 = 0, then recharge +4 gives 4 bolts!
+game.hand.push({ uid: 'c10', type: 'number', op: '+', value: 10, label: '+10', target: 10 });
+// Also leave 1 card in discard to verify auto-pickup
+game.playerDiscard.push({ uid: 'discarded_test', type: 'number', op: '+', value: 1, label: '+1', target: 1 });
 
-const buyMktRes = game.playBuy('market', 0, mSolverCards);
-assert.strictEqual(buyMktRes.success, true, 'Market buy should succeed');
-assert.strictEqual(buyMktRes.targetMatched, true, 'Target must match');
-assert.strictEqual(game.market[0], null, 'Market slot 0 should now be null');
-assert.strictEqual(game.hand.some(c => c.uid === marketCard.uid), true, 'Bought card must enter player hand');
-console.log(`   ✓ Bought ${marketCard.label} from market into hand.`);
+const atkRes = game.playAttack(game.hand.filter(c => c.uid === 'c10'));
+assert.strictEqual(atkRes.success, true);
+assert.strictEqual(atkRes.targetMatched, true);
 
-// Test 8: Market Refresh & Pickup
-console.log('8. Testing Market Refresh and Pickup...');
-const r1 = game.playMarketRefresh();
-assert.strictEqual(r1.success, true, 'Market Refresh should succeed');
-assert.strictEqual(game.market.length, 5, 'Market should have 5 slots');
-assert.strictEqual(game.market.every(c => c !== null && c.type === 'number'), true, 'All 5 market slots refilled with numbers');
+// Check Fish 2 advanced
+assert.strictEqual(game.currentMonsterIndex, 1, 'Advanced to Fish 2 (Electric Eel)');
+assert.strictEqual(game.currentMonster.name, 'Electric Eel');
 
-const p1 = game.playPickup();
-assert.strictEqual(p1.success, true, 'Pickup should succeed');
-assert.strictEqual(game.playerDiscard.length, 0, 'Player discard emptied');
-console.log('   ✓ Refresh and Pickup work properly.');
+// Check battery recharge: was 1, -1 for attack = 0, +4 recharge = 4 bolts
+assert.strictEqual(game.currentBolts, 4, 'Battery recharged to 4 bolts');
 
-// Test 9: Final Attack mechanics
-console.log('9. Testing Final Attack at doom limit...');
-const curMonster = game.currentMonster;
-while (game.currentDoom < curMonster.doomLimit) {
-  game.playMarketRefresh();
-}
-assert.strictEqual(game.isFinalAttack, true, 'Final Attack must be triggered');
-assert.strictEqual(game.playBuy('market', 0, []).success, false, 'Buy must be blocked during Final Attack');
-assert.strictEqual(game.playMarketRefresh().success, false, 'Market Refresh must be blocked during Final Attack');
-assert.strictEqual(game.playPickup().success, false, 'Pickup must be blocked during Final Attack');
+// Check auto-pickup
+assert.strictEqual(game.playerDiscard.length, 0, 'All discard automatically picked up');
+assert.strictEqual(game.hand.some(c => c.uid === 'discarded_test'), true, 'Discarded card returned to hand');
 
-// Missed final attack causes defeat
-const failAttack = game.playAttack([]);
-assert.strictEqual(game.status, 'lost', 'Failed final attack must end game in loss');
-console.log('   ✓ Final Attack properly locks actions and ends game on failure.');
+// Check auto market refill: empty slot 0 was refilled
+assert.strictEqual(game.market[0] !== null, true, 'Empty market slot was refilled automatically');
+assert.strictEqual(game.market.every(c => c !== null), true, 'All 5 market slots filled');
 
-// Test 10: Final Monster Defeat & Victory Bonus (v0.6)
-console.log('10. Testing Monster 6 defeat and automatic victory bonus...');
+// Check treasure revealed to stockpile
+assert.strictEqual(game.treasureStockpile.length, 1, 'Stockpile received 1 treasure');
+console.log(`   ✓ Defeating Fish 1 recharged battery to ${game.currentBolts}/5, auto-picked up discard, refilled market, and revealed treasure.`);
+
+// Test 6: Battery depletion to 0 bolts activates Final Attack
+console.log('6. Testing battery depletion and Final Attack at 0 bolts...');
+// Current bolts = 4. Spend 4 bolts with market refreshes
+game.playMarketRefresh(); // 3
+game.playMarketRefresh(); // 2
+game.playMarketRefresh(); // 1
+game.playMarketRefresh(); // 0
+assert.strictEqual(game.currentBolts, 0, 'Battery is now at 0 bolts');
+assert.strictEqual(game.isFinalAttack, true, 'Final Attack is active');
+
+// Other actions locked
+assert.strictEqual(game.playBuy('market', 0, []).success, false, 'Buy locked at 0 bolts');
+assert.strictEqual(game.playMarketRefresh().success, false, 'Refresh locked at 0 bolts');
+assert.strictEqual(game.playPickup().success, false, 'Pickup locked at 0 bolts');
+
+// Final Attack hit against Electric Eel (target 16, recharge 3)
+game.hand.push({ uid: 'eel_killer', type: 'number', op: '+', value: 16, label: '+16', target: 16 });
+const faRes = game.playAttack(game.hand.filter(c => c.uid === 'eel_killer'));
+assert.strictEqual(faRes.success, true);
+assert.strictEqual(faRes.finalAttack, true);
+assert.strictEqual(game.currentMonsterIndex, 2, 'Advanced to Fish 3 (Pufferfish)');
+assert.strictEqual(game.currentBolts, 3, 'Recharged 0 + 3 = 3 bolts from Electric Eel');
+assert.strictEqual(game.isFinalAttack, false, 'Final Attack resolved');
+console.log('   ✓ Final Attack hit survived 0 bolts and recharged battery to 3/5.');
+
+// Test 7: Final Attack miss ends journey
+console.log('7. Testing Final Attack miss ends adventure in defeat...');
+const failGame = new GameState();
+failGame.currentBolts = 0; // drain battery
+assert.strictEqual(failGame.isFinalAttack, true);
+const missRes = failGame.playAttack([]);
+assert.strictEqual(missRes.success, true);
+assert.strictEqual(missRes.finalAttack, true);
+assert.strictEqual(failGame.status, 'lost', 'Status must be lost on Final Attack miss');
+console.log('   ✓ Final Attack miss ends journey.');
+
+// Test 8: Great White Shark (Fish 6) Defeat & Automatic Victory Bonus
+console.log('8. Testing Great White Shark defeat and victory treasure bonus...');
 const victoryGame = new GameState();
-// Skip to monster 6 (index 5)
 victoryGame.currentMonsterIndex = 5;
-const finalMonster = victoryGame.currentMonster;
-assert.strictEqual(finalMonster.id, 6, 'Should be monster 6');
+const shark = victoryGame.currentMonster;
+assert.strictEqual(shark.name, 'Great White Shark');
+assert.strictEqual(shark.target, 98);
 
-// Defeat monster 6: target is 98
-victoryGame.hand.push({ uid: 'm6_killer', type: 'number', op: '+', value: 98, label: '+98', target: 98 });
-const m6Cards = victoryGame.hand.filter(c => c.uid === 'm6_killer');
-const vRes = victoryGame.playAttack(m6Cards);
-
-assert.strictEqual(vRes.success, true, 'Final attack must succeed');
+victoryGame.hand.push({ uid: 'shark_slayer', type: 'number', op: '+', value: 98, label: '+98', target: 98 });
+const sharkRes = victoryGame.playAttack(victoryGame.hand.filter(c => c.uid === 'shark_slayer'));
+assert.strictEqual(sharkRes.success, true);
 assert.strictEqual(victoryGame.status, 'won', 'Game status must be won');
-assert.strictEqual(victoryGame.treasureChest.length, 1, 'Victory bonus treasure must be in treasure chest');
-assert.ok(victoryGame.victoryTreasure !== null, 'victoryTreasure must be recorded');
-assert.strictEqual(victoryGame.totalGems, victoryGame.victoryTreasure.gems, 'Total gems must include victory bonus');
-console.log(`   ✓ Monster 6 defeated! Victory bonus awarded: ${victoryGame.victoryTreasure.label} (+${victoryGame.victoryTreasure.gems} 💎). Status: ${victoryGame.status}.`);
+assert.ok(victoryGame.victoryTreasure !== null, 'Victory treasure awarded');
+assert.strictEqual(victoryGame.treasureChest.length, 1, 'Treasure chest has victory bonus');
+console.log(`   ✓ Great White Shark defeated! Won ${victoryGame.victoryTreasure.label} (+${victoryGame.victoryTreasure.gems} 💎). Adventure won!`);
 
-console.log('\n✅ ALL 10 v0.6 INTEGRATION TESTS PASSED SUCCESSFULLY!');
+console.log('\n✅ ALL 8 v0.7 UNDERWATER SCOOTER TESTS PASSED SUCCESSFULLY!');

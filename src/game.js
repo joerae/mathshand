@@ -1,9 +1,9 @@
 /**
- * Core Game Engine for Maths Handbuilder (v0.6)
+ * Core Game Engine for Maths Handbuilder (v0.7 Underwater Scooter)
  */
 import { STARTING_HAND, buildDrawPile, GAME_CONFIG } from '../data/cards.js';
 import { buildTreasureDeck } from '../data/treasures.js';
-import { MONSTERS } from '../data/monsters.js';
+import { MONSTERS, FISH_ENCOUNTERS } from '../data/monsters.js';
 
 export function shuffle(array) {
   const arr = [...array];
@@ -16,29 +16,32 @@ export function shuffle(array) {
 
 export class GameState {
   constructor(customMonsters = null) {
-    this.monsters = customMonsters || MONSTERS;
+    this.monsters = customMonsters || FISH_ENCOUNTERS || MONSTERS;
     this.reset();
   }
 
   reset() {
     this.monstersList = JSON.parse(JSON.stringify(this.monsters));
     this.currentMonsterIndex = 0;
-    
-    // Number Draw Deck & Piles (66 cards)
+
+    // Electric Scooter Battery (5 double-sided bolt cards)
+    this.maxBolts = 5;
+    this.currentBolts = 5; // Starts with 5 charged bolts
+
+    // Number Draw Deck & Discard (66 cards total; no doom cards)
     this.drawPile = shuffle(buildDrawPile());
-    this.drawDiscard = [];     // Discarded doom cards and refreshed market cards
-    this.doomCards = [];       // Face-down cards on the current monster
-    
-    // Separate Treasure Deck & Stockpile (v0.6)
+    this.drawDiscard = []; // Refreshed market cards
+
+    // Separate Treasure Deck & Stockpile
     this.treasureDeck = shuffle(buildTreasureDeck());
     this.treasureStockpile = []; // Revealed treasures available to claim (starts empty)
     this.treasureChest = [];     // Claimed treasures / gems
-    this.victoryTreasure = null; // Bonus treasure awarded upon defeating monster 6
-    
+    this.victoryTreasure = null; // Bonus treasure awarded upon defeating final fish
+
     // Player Hand & Discard (Only contains number cards)
     this.hand = JSON.parse(JSON.stringify(STARTING_HAND)); // +1, +2, +3
     this.playerDiscard = [];
-    
+
     // Market: 5 number cards
     this.market = [];
     this.initMarket();
@@ -47,21 +50,41 @@ export class GameState {
     this.status = 'in_progress';
     this.statusMessage = '';
 
-    // Action log for reviewing turns
+    // Action log
     this.log = [];
-    this.addLog('Game started (v0.6 rules). Starting hand: +1, +2, +3. First monster: ' + this.currentMonster.name);
+    this.addLog(`Underwater scooter adventure started (v0.7 rules). Battery: 5/5 bolts. First encounter: ${this.currentMonster.name}!`);
   }
 
   get currentMonster() {
     return this.monstersList[this.currentMonsterIndex] || null;
   }
 
-  get currentDoom() {
-    return this.doomCards.length;
+  // Alias for underwater theme
+  get currentFish() {
+    return this.currentMonster;
   }
 
   get totalGems() {
     return this.treasureChest.reduce((sum, t) => sum + (t.gems || 0), 0);
+  }
+
+  /**
+   * Final Attack is active when scooter battery reaches 0 bolts.
+   * During Final Attack, no other actions (Buy, Refresh, Pickup) are available.
+   */
+  get isFinalAttack() {
+    return (
+      this.status === 'in_progress' &&
+      this.currentMonster !== null &&
+      this.currentBolts === 0
+    );
+  }
+
+  /**
+   * Spend 1 battery bolt for taking an action.
+   */
+  spendBolt() {
+    this.currentBolts = Math.max(0, this.currentBolts - 1);
   }
 
   /**
@@ -94,18 +117,6 @@ export class GameState {
       // Storage unavailable or disabled
     }
     return 0;
-  }
-
-  /**
-   * Final Attack is active when Doom reaches or exceeds the monster's doom limit.
-   * During Final Attack, no other actions (Buy, Refresh, Pickup) are available.
-   */
-  get isFinalAttack() {
-    return (
-      this.status === 'in_progress' &&
-      this.currentMonster !== null &&
-      this.currentDoom >= this.currentMonster.doomLimit
-    );
   }
 
   addLog(msg, type = 'info') {
@@ -166,13 +177,20 @@ export class GameState {
   }
 
   /**
-   * Adds 1 doom card to the monster from the draw pile.
+   * Refills only empty slots in the market up to marketSize.
    */
-  addDoomCard() {
-    const card = this.drawCardFromDeck();
-    if (card) {
-      this.doomCards.push(card);
+  refillEmptyMarketSlots() {
+    let refilled = 0;
+    for (let i = 0; i < GAME_CONFIG.marketSize; i++) {
+      if (!this.market[i]) {
+        const card = this.drawCardFromDeck();
+        if (card) {
+          this.market[i] = card;
+          refilled++;
+        }
+      }
     }
+    return refilled;
   }
 
   /**
@@ -237,18 +255,18 @@ export class GameState {
   }
 
   /**
-   * ACTION 1: Attack Monster
-   * Defeating monster 1-5 adds 1 treasure to the stockpile.
-   * Defeating the final monster automatically awards final treasure and wins!
+   * ACTION 1: Attack Sea Creature
+   * Costs 1 bolt.
+   * On Final Attack (0 bolts), success defeats fish and continues; miss ends journey.
    */
   playAttack(selectedNumberCards) {
     if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
 
     const wasFinalAttack = this.isFinalAttack;
-    const monster = this.currentMonster;
-    const isFinalMonster = (this.currentMonsterIndex === this.monstersList.length - 1);
+    const fish = this.currentMonster;
+    const isFinalFish = (this.currentMonsterIndex === this.monstersList.length - 1);
     const { total, steps } = GameState.calculateSequence(selectedNumberCards);
-    const targetMatched = (total === monster.target);
+    const targetMatched = (total === fish.target);
     const sequenceSummary = steps.map(s => s.card.label).join(' → ') || '(0 cards)';
 
     // Discard played number cards
@@ -256,40 +274,41 @@ export class GameState {
 
     if (wasFinalAttack) {
       if (targetMatched) {
-        this.addLog(`⚔️ FINAL ATTACK SUCCESS: [${sequenceSummary}] = ${total}. Defeated ${monster.name} on the brink of doom!`, 'success');
-        this.drawDiscard.push(...this.doomCards);
-        this.doomCards = [];
-
-        this.handleMonsterDefeat(isFinalMonster, monster);
+        this.addLog(`⚔️ FINAL ATTACK SUCCESS: [${sequenceSummary}] = ${total}. Defeated ${fish.name} with battery depleted!`, 'success');
+        this.handleFishDefeat(isFinalFish, fish, true);
         return { success: true, targetMatched: true, finalAttack: true, total };
       } else {
         this.status = 'lost';
-        this.statusMessage = `Final Attack failed against ${monster.name}! Needed 🎯 ${monster.target}, got ${total}.`;
-        this.addLog(`☠️ GAME OVER: Final Attack missed [${sequenceSummary}] = ${total} (needed 🎯 ${monster.target}). The monster overwhelmed you!`, 'danger');
+        this.statusMessage = `Final Attack missed against ${fish.name}! Needed 🎯 ${fish.target}, got ${total}.`;
+        this.addLog(`☠️ OUT OF POWER: Final Attack missed [${sequenceSummary}] = ${total} (needed 🎯 ${fish.target}). The scooter stranded underwater!`, 'danger');
         return { success: true, targetMatched: false, finalAttack: true, total };
       }
     }
 
-    // Normal Attack: adds 1 Doom counter
-    this.addDoomCard();
+    // Normal Attack: costs 1 Bolt
+    this.spendBolt();
 
     if (targetMatched) {
-      this.addLog(`⚔️ ATTACK SUCCESS: [${sequenceSummary}] = ${total}. Defeated ${monster.name} (🎯 ${monster.target})!`, 'success');
-      this.drawDiscard.push(...this.doomCards);
-      this.doomCards = [];
-
-      this.handleMonsterDefeat(isFinalMonster, monster);
+      this.addLog(`⚔️ ATTACK SUCCESS: [${sequenceSummary}] = ${total}. Defeated ${fish.name} (🎯 ${fish.target})!`, 'success');
+      this.handleFishDefeat(isFinalFish, fish, false);
       return { success: true, targetMatched: true, finalAttack: false, total };
     } else {
-      this.addLog(`❌ ATTACK FAILED: [${sequenceSummary}] = ${total}. Needed 🎯 ${monster.target}. (Doom: ${this.currentDoom}/${monster.doomLimit})`, 'warning');
+      this.addLog(`❌ ATTACK FAILED: [${sequenceSummary}] = ${total}. Needed 🎯 ${fish.target}. (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'warning');
       this.checkFinalAttackTrigger();
       return { success: true, targetMatched: false, finalAttack: false, total };
     }
   }
 
-  handleMonsterDefeat(isFinalMonster, monster) {
-    if (isFinalMonster) {
-      // Final monster defeated: award final treasure automatically!
+  /**
+   * Handles post-encounter sequence upon defeating a sea creature:
+   * 1. Recharges battery bolts up to max 5.
+   * 2. Auto-pickup: returns all played number cards to hand.
+   * 3. Auto-refill: fills empty market slots up to 5.
+   * 4. Reveals 1 random treasure into stockpile (or awards victory bonus on final fish).
+   */
+  handleFishDefeat(isFinalFish, fish, fromFinalAttack = false) {
+    if (isFinalFish) {
+      // Final fish (Great White Shark) defeated: award final treasure automatically & win!
       const victoryTreasure = this.drawTreasureCard();
       if (victoryTreasure) {
         this.treasureChest.push(victoryTreasure);
@@ -297,25 +316,49 @@ export class GameState {
       }
       this.victoryTreasure = victoryTreasure;
       this.status = 'won';
-      this.statusMessage = 'Victory! All monsters defeated!';
-      this.addLog(`🏆 VICTORY: All monsters defeated! Final victory bonus: ${victoryTreasure ? `${victoryTreasure.label} (+${victoryTreasure.gems} 💎)` : 'None'}. Total gems earned: ${this.totalGems} 💎!`, 'victory');
+      this.statusMessage = 'Victory! Great White Shark defeated! Adventure completed!';
+      this.addLog(`🏆 VICTORY: Great White Shark defeated! Final victory bonus: ${victoryTreasure ? `${victoryTreasure.label} (+${victoryTreasure.gems} 💎)` : 'None'}. Total gems earned: ${this.totalGems} 💎!`, 'victory');
     } else {
-      // Monsters 1 to 5: reveal 1 treasure into the stockpile
+      // 1. Restore bolts
+      const rechargeAmount = typeof fish.recharge === 'number' ? fish.recharge : 0;
+      const boltsBefore = this.currentBolts;
+      this.currentBolts = Math.min(this.maxBolts, this.currentBolts + rechargeAmount);
+      const boltsRestored = this.currentBolts - boltsBefore;
+
+      // 2. Automatic Pickup: Return all played cards to hand
+      const cardsPickedUp = this.playerDiscard.length;
+      this.hand.push(...this.playerDiscard);
+      this.playerDiscard = [];
+
+      // 3. Automatic Market Refill: Replenish empty slots
+      const slotsRefilled = this.refillEmptyMarketSlots();
+
+      // 4. Reveal 1 treasure into the stockpile
       this.currentMonsterIndex++;
-      this.revealTreasureToStockpile();
-      this.addLog(`Next monster revealed: ${this.currentMonster.name} (🎯 ${this.currentMonster.target}, ☠ Doom Limit ${this.currentMonster.doomLimit})`, 'info');
+      const nextFish = this.currentMonster;
+      const revealedTreasure = this.revealTreasureToStockpile();
+
+      this.addLog(
+        `⚡ POST-BATTLE RECOVERY: Recharged +${boltsRestored} bolts (${this.currentBolts}/${this.maxBolts} ⚡), retrieved ${cardsPickedUp} cards to hand, and refilled ${slotsRefilled} market slots. Next encounter: ${nextFish.name} (🎯 ${nextFish.target}, ⚡ Recharge: +${nextFish.recharge})!`,
+        'success'
+      );
     }
   }
 
+  // Alias for backward compatibility
+  handleMonsterDefeat(isFinalMonster, monster) {
+    return this.handleFishDefeat(isFinalMonster, monster, false);
+  }
+
   /**
-   * ACTION 2: Buy (Market Card OR Stockpile Treasure)
-   * In v0.6:
-   * - targetType: 'market' (buys number card into hand)
+   * ACTION 2: Buy / Claim (Market Card OR Stockpile Treasure)
+   * Costs 1 bolt.
+   * - targetType: 'market' (buys number card into hand, slot stays empty until next fish defeat or refresh)
    * - targetType: 'stockpile' (claims treasure into treasure chest)
    */
   playBuy(targetType, targetIndex, selectedNumberCards) {
     if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
-    if (this.isFinalAttack) return { success: false, reason: 'Final Attack active! No other actions are available.' };
+    if (this.isFinalAttack) return { success: false, reason: 'Scooter is out of battery! Only Final Attack is available.' };
 
     const targetCard = (targetType === 'stockpile')
       ? this.treasureStockpile[targetIndex]
@@ -332,8 +375,8 @@ export class GameState {
     // Discard played number cards
     this.discardFromHand(selectedNumberCards);
 
-    // Adds 1 Doom counter
-    this.addDoomCard();
+    // Costs 1 bolt
+    this.spendBolt();
 
     if (targetMatched) {
       if (targetType === 'stockpile') {
@@ -342,21 +385,21 @@ export class GameState {
         this.treasureChest.push(targetCard);
         GameState.addPermanentGems(targetCard.gems);
 
-        this.addLog(`💎 TREASURE CLAIMED: [${sequenceSummary}] = ${total}. Claimed ${targetCard.label} (🎯 ${targetCard.target}, +${targetCard.gems} 💎)! Total: ${this.totalGems} 💎. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'treasure');
+        this.addLog(`💎 TREASURE CLAIMED: [${sequenceSummary}] = ${total}. Claimed ${targetCard.label} (🎯 ${targetCard.target}, +${targetCard.gems} 💎)! Total: ${this.totalGems} 💎. (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'treasure');
         this.checkFinalAttackTrigger();
         return { success: true, targetMatched: true, targetType: 'stockpile', acquiredCard: targetCard, total };
       } else {
-        // Buy number card from market -> into hand
+        // Buy number card from market -> into hand (slot stays empty until next fish defeat or refresh)
         this.market[targetIndex] = null;
         this.hand.push(targetCard);
 
-        this.addLog(`🛒 BUY SUCCESS: [${sequenceSummary}] = ${total}. Acquired ${targetCard.label} (🎯 ${targetCard.target}) into hand! (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'success');
+        this.addLog(`🛒 BUY SUCCESS: [${sequenceSummary}] = ${total}. Acquired ${targetCard.label} (🎯 ${targetCard.target}) into hand! (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'success');
         this.checkFinalAttackTrigger();
         return { success: true, targetMatched: true, targetType: 'market', acquiredCard: targetCard, total };
       }
     } else {
       const typeDesc = targetType === 'stockpile' ? 'Treasure target' : 'Market card target';
-      this.addLog(`❌ BUY FAILED: [${sequenceSummary}] = ${total}. Needed ${typeDesc} 🎯 ${targetCard.target}. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'warning');
+      this.addLog(`❌ BUY FAILED: [${sequenceSummary}] = ${total}. Needed ${typeDesc} 🎯 ${targetCard.target}. (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'warning');
       this.checkFinalAttackTrigger();
       return { success: true, targetMatched: false, targetType, total };
     }
@@ -364,11 +407,11 @@ export class GameState {
 
   /**
    * ACTION 3: Market Refresh
-   * Replaces the 5 market cards with fresh number cards from draw pile.
+   * Replaces all 5 market cards with fresh cards from draw pile. Costs 1 bolt.
    */
   playMarketRefresh() {
     if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
-    if (this.isFinalAttack) return { success: false, reason: 'Final Attack active! No other actions are available.' };
+    if (this.isFinalAttack) return { success: false, reason: 'Scooter is out of battery! Only Final Attack is available.' };
 
     for (const card of this.market) {
       if (card) {
@@ -377,35 +420,35 @@ export class GameState {
     }
 
     this.initMarket();
-    this.addDoomCard();
+    this.spendBolt();
 
-    this.addLog(`🔄 MARKET REFRESH: Dealt 5 new cards to market. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'info');
+    this.addLog(`🔄 MARKET REFRESH: Replaced all 5 market cards. (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'info');
     this.checkFinalAttackTrigger();
     return { success: true };
   }
 
   /**
    * ACTION 4: Pickup
-   * Returns all played number cards in player discard back to hand.
+   * Returns all played number cards in player discard back to hand mid-encounter. Costs 1 bolt.
    */
   playPickup() {
     if (this.status !== 'in_progress') return { success: false, reason: 'Game has already ended.' };
-    if (this.isFinalAttack) return { success: false, reason: 'Final Attack active! No other actions are available.' };
+    if (this.isFinalAttack) return { success: false, reason: 'Scooter is out of battery! Only Final Attack is available.' };
 
     const returnedCount = this.playerDiscard.length;
     this.hand.push(...this.playerDiscard);
     this.playerDiscard = [];
 
-    this.addDoomCard();
+    this.spendBolt();
 
-    this.addLog(`✋ PICKUP: Retrieved ${returnedCount} cards from discard back to hand. (Doom: ${this.currentDoom}/${this.currentMonster.doomLimit})`, 'info');
+    this.addLog(`✋ PICKUP: Retrieved ${returnedCount} cards from discard back to hand. (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'info');
     this.checkFinalAttackTrigger();
     return { success: true, returnedCount };
   }
 
   checkFinalAttackTrigger() {
     if (this.isFinalAttack) {
-      this.addLog(`🚨 FINAL ATTACK ACTIVATED: Doom reached ${this.currentDoom}/${this.currentMonster.doomLimit}! Make your Final Attack now (hit 🎯 ${this.currentMonster.target} or game ends).`, 'warning');
+      this.addLog(`🚨 FINAL ATTACK ACTIVATED: Scooter battery is depleted (0/5 ⚡)! You have one final Attack to hit 🎯 ${this.currentMonster.target} or the journey ends.`, 'warning');
     }
   }
 
@@ -413,26 +456,15 @@ export class GameState {
 
   debugSkipMonster() {
     if (this.currentMonster) {
-      this.drawDiscard.push(...this.doomCards);
-      this.doomCards = [];
       const isFinalMonster = (this.currentMonsterIndex === this.monstersList.length - 1);
-      this.handleMonsterDefeat(isFinalMonster, this.currentMonster);
-      this.addLog(`[Debug] Skipped monster.`, 'system');
+      this.handleFishDefeat(isFinalMonster, this.currentMonster, false);
+      this.addLog(`[Debug] Skipped sea creature.`, 'system');
     }
   }
 
-  debugAdjustDoom(delta) {
-    if (delta > 0) {
-      for (let i = 0; i < delta; i++) {
-        this.addDoomCard();
-      }
-    } else if (delta < 0) {
-      for (let i = 0; i < Math.abs(delta); i++) {
-        const removed = this.doomCards.pop();
-        if (removed) this.drawDiscard.push(removed);
-      }
-    }
-    this.addLog(`[Debug] Adjusted doom by ${delta}. Current: ${this.currentDoom}/${this.currentMonster ? this.currentMonster.doomLimit : '-'}`, 'system');
+  debugAdjustBolts(delta) {
+    this.currentBolts = Math.max(0, Math.min(this.maxBolts, this.currentBolts + delta));
+    this.addLog(`[Debug] Adjusted battery by ${delta}. Current: ${this.currentBolts}/${this.maxBolts} ⚡`, 'system');
     this.checkFinalAttackTrigger();
   }
 

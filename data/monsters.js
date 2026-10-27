@@ -1,12 +1,14 @@
 /**
- * Monster Sequence Configuration for Maths Handbuilder
+ * Fish Encounters Configuration for Maths Handbuilder (v0.7 Underwater Scooter)
  */
 
 export const MONSTERS = [
-  { id: 1, name: 'Monster 1', target: 10, doomLimit: 6 },
-  { id: 2, name: 'Monster 2', target: 16, doomLimit: 6 },
-  { id: 3, name: 'Monster 3', target: 36, doomLimit: 5 },
-  { id: 4, name: 'Monster 4', target: 56, doomLimit: 4 },
-  { id: 5, name: 'Monster 5', target: -12, doomLimit: 4 },
-  { id: 6, name: 'Monster 6', target: 98, doomLimit: 3 }
+  { id: 1, name: 'Chainsaw Clownfish', target: 10, recharge: 4 },
+  { id: 2, name: 'Electric Eel', target: 16, recharge: 3 },
+  { id: 3, name: 'Pufferfish', target: 36, recharge: 4 },
+  { id: 4, name: "Kraken Takin' a Break'n", target: 56, recharge: 3 },
+  { id: 5, name: 'Anglerfish', target: -12, recharge: 5 },
+  { id: 6, name: 'Great White Shark', target: 98, recharge: 'Victory' }
 ];
+
+export const FISH_ENCOUNTERS = MONSTERS;
