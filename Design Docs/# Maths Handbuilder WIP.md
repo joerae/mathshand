@@ -17,6 +17,7 @@ Build a powerful hand, collect treasure, and unlock new content across multiple 
 - **Strategic:** Build your hand and manage your limited battery.
 - **Replayable:** Random card acquisition creates different combinations and strategies.
 - **Accessible:** Designed for children aged eight and up.
+- **Tabletop Physicality:** Every game component is designed as a physical card or playmat space (see [Physicality and Layout Specification.md](file:///c:/Users/jraeb/Maths%20Handbuilder/Design%20Docs/Physicality%20and%20Layout%20Specification.md)).
 
 ## 2. Cards and actions
 
