@@ -962,11 +962,52 @@ body {
   color: #ef4444;
 }
 
-/* Action Buttons Grid */
+/* Action Buttons Grid (3 buttons in v0.8) */
 .action-buttons-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+}
+
+@media (max-width: 650px) {
+  .action-buttons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card Replacement Banner */
+.replacement-banner {
+  background: #fef3c7;
+  border: 1.5px solid #f59e0b;
+  color: #92400e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 0.88rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);
+}
+
+.replacement-banner.hidden {
+  display: none;
+}
+
+.portrait-card.selectable-for-replacement {
+  border: 2px dashed #f59e0b !important;
+  cursor: pointer;
+  animation: pulseReplace 1.2s infinite alternate ease-in-out;
+}
+
+.portrait-card.selectable-for-replacement:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 6px 14px rgba(245, 158, 11, 0.4);
+}
+
+@keyframes pulseReplace {
+  0% { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3); }
+  100% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.6); }
 }
 
 .action-btn {

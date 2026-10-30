@@ -1,15 +1,19 @@
 /**
- * Card and Deck Configuration for Maths Handbuilder (v0.6)
+ * Card and Deck Configuration for Maths Handbuilder (v0.8)
  * 
- * In v0.6:
+ * In v0.8:
  * - Starting hand contains 3 cards: +1, +2, +3
- * - Draw pile supplies market cards and Doom counters (66 number cards)
+ * - Scooter card capacity: 7 number cards
+ * - Battery capacity: 4 bolts
+ * - Draw pile: 54 number cards (+ and × only)
  * - Treasure cards are kept in a separate deck (data/treasures.js)
  */
 
 export const GAME_CONFIG = {
   marketSize: 5,
-  startingHandSize: 3
+  startingHandSize: 3,
+  handCapacity: 7,
+  batteryCapacity: 4
 };
 
 /**
@@ -23,8 +27,8 @@ export const STARTING_HAND = [
 ];
 
 /**
- * Draw pile distribution definition (66 cards total as per Section 8).
- * All cards in the draw pile are number cards.
+ * Draw pile distribution definition (54 cards total as per Section 10).
+ * All cards in the baseline draw pile are positive addition and multiplication cards.
  */
 export const DRAW_PILE_DISTRIBUTION = [
   // +1 to +4: 5 copies each (20 cards)
@@ -32,9 +36,6 @@ export const DRAW_PILE_DISTRIBUTION = [
 
   // +5 to +9: 3 copies each (15 cards)
   { op: '+', min: 5, max: 9, copies: 3 },
-
-  // −1 to −4: 3 copies each (12 cards)
-  { op: '-', min: 1, max: 4, copies: 3 },
 
   // ×2 to ×4: 3 copies each (9 cards)
   { op: '×', min: 2, max: 4, copies: 3 },

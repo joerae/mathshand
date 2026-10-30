@@ -12,24 +12,21 @@
     <header class="top-bar">
       <div class="title-group">
         <h1>Maths Handbuilder</h1>
-        <span class="version-tag">Rules Prototype v0.7 (Underwater Scooter)</span>
+        <span class="version-tag">Rules v0.8</span>
       </div>
 
       <div class="deck-stats">
-        <div class="stat-pill battery-pill" title="Scooter battery charge (5 double-sided cards)">
-          Battery: <strong>⚡ <span id="stat-battery-count">5</span>/5</strong>
+        <div class="stat-pill battery-pill" title="Scooter battery charge (4 double-sided cards)">
+          Battery: <strong>⚡ <span id="stat-battery-count">4</span>/4</strong>
         </div>
-        <div class="stat-pill" title="Cards remaining in the 66-card number deck">
+        <div class="stat-pill" title="Cards remaining in the 54-card number deck">
           Draw Pile: <strong id="stat-draw-count">0</strong>
         </div>
         <div class="stat-pill" title="Reshuffle pile (refreshed market cards)">
           Deck Discard: <strong id="stat-discard-count">0</strong>
         </div>
-        <div class="stat-pill" title="Played number cards in your discard pile (recovered with Pickup)">
-          Player Discard: <strong id="stat-player-discard-count">0</strong>
-        </div>
-        <div class="stat-pill" title="Number cards currently in your hand">
-          Hand: <strong id="stat-hand-count">0</strong>
+        <div class="stat-pill" title="Number cards currently in your hand (max 7)">
+          Hand: <strong><span id="stat-hand-count">0</span>/7</strong>
         </div>
         <div class="stat-pill treasure-pill" title="Gems in current adventure and permanent legacy stash">
           Run: <strong>💎 <span id="stat-gem-count">0</span></strong> | Stash: <strong>💎 <span id="stat-stash-count">0</span></strong>
@@ -39,7 +36,7 @@
       </div>
     </header>
 
-    <!-- Game Status Banner (Victory / Defeat) -->
+    <!-- Game Status Banner (Victory / Defeat / Post-Shark) -->
     <div id="game-status-banner" class="status-banner hidden"></div>
 
     <!-- Final Attack Urgent Alert Banner -->
@@ -74,21 +71,17 @@
                 <span class="badge-sub">TARGET</span>
                 <span id="monster-target" class="badge-num">10</span>
               </div>
-              <div class="fish-card-recharge-box">
-                <span class="badge-sub">RECHARGE</span>
-                <span id="fish-recharge-val" class="badge-num">+4 ⚡</span>
-              </div>
             </div>
           </div>
 
-          <!-- Scooter Battery (5 Double-Sided Portrait Cards) -->
+          <!-- Scooter Battery (4 Double-Sided Portrait Cards) -->
           <div class="scooter-battery-box">
             <div class="battery-header">
               <span class="battery-label">⚡ SCOOTER BATTERY</span>
-              <span id="battery-count-text" class="battery-count">5 / 5 Bolts</span>
+              <span id="battery-count-text" class="battery-count">4 / 4 Bolts</span>
             </div>
             <div id="battery-cards-row" class="battery-cards-row"></div>
-            <div class="battery-help">Five double-sided bolt cards (portrait). Costs 1 bolt per action. Defeating creatures restores bolts!</div>
+            <div class="battery-help">Four double-sided bolt cards (portrait). Costs 1 bolt per action. Defeating any creature fully refills the battery to 4 bolts!</div>
           </div>
         </div>
 
@@ -96,22 +89,20 @@
         <div class="panel hand-panel">
           <div class="panel-header">
             <span class="panel-tag">YOUR HAND</span>
-            <span class="panel-hint">Click number cards to chain in played order</span>
+            <span class="panel-hint">Cards are reusable • Click to chain onto Calculation Workbench</span>
+          </div>
+
+          <!-- Card Replacement Prompt Banner when Buying at 7/7 Capacity -->
+          <div id="hand-replacement-alert" class="replacement-banner hidden">
+            <div>
+              <strong>🔄 SCOOTER AT CAPACITY (7/7)!</strong>
+              <div id="replacement-prompt-text" style="font-size: 0.8rem; margin-top: 2px;">Click a card in your hand to permanently replace it.</div>
+            </div>
+            <button id="btn-cancel-replacement" class="btn-sm" style="background: #ffffff; border: 1px solid #d97706; color: #92400e;">Cancel</button>
           </div>
 
           <div id="hand-number-cards" class="cards-flex-row">
             <!-- Number cards injected dynamically -->
-          </div>
-
-          <!-- Discard preview -->
-          <div id="discard-preview-section" class="discard-preview-box">
-            <div class="discard-preview-header">
-              <span>Played Discard Pile (<span id="discard-preview-count">0</span> cards):</span>
-              <small>Play <strong>✋ Pickup</strong> (or defeat fish) to return all to hand</small>
-            </div>
-            <div id="discard-preview-cards" class="cards-flex-row mini-cards">
-              <!-- Cards in discard injected dynamically -->
-            </div>
           </div>
         </div>
 
@@ -135,11 +126,6 @@
             <button id="btn-action-refresh" class="action-btn btn-refresh">
               <div class="btn-title">🔄 Market Refresh</div>
               <div class="btn-sub">Discard market & deal 5 new cards</div>
-            </button>
-
-            <button id="btn-action-pickup" class="action-btn btn-pickup">
-              <div class="btn-title">✋ Pickup (0)</div>
-              <div class="btn-sub">Return all discarded cards to hand</div>
             </button>
           </div>
         </div>

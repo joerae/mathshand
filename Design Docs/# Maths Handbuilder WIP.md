@@ -1,6 +1,6 @@
 # Maths Handbuilder WIP
 
-**Game Design Document | v0.7**
+**Game Design Document | v0.8**
 
 *A roguelike handbuilding game where maths powers your underwater adventure.*
 
@@ -8,41 +8,44 @@
 
 Ride an electric scooter through a bizarre underwater world, defeating increasingly dangerous sea creatures by combining cards to make exact target numbers.
 
-Build a powerful hand, collect treasure, and unlock new content across multiple games.
+Build a versatile hand of mathematical cards, collect treasure, and unlock new content across multiple adventures.
 
 **Design principles**
 
 - **Simple:** Cards explain how to play, with minimal additional rules.
 - **Fun first:** Maths is the game, not a separate quiz.
-- **Strategic:** Build your hand and manage your limited battery.
+- **Strategic:** Build a powerful hand within limited capacity and manage your battery.
 - **Replayable:** Random card acquisition creates different combinations and strategies.
 - **Accessible:** Designed for children aged eight and up.
-- **Tabletop Physicality:** Every game component is designed as a physical card or playmat space (see [Physicality and Layout Specification.md](file:///c:/Users/jraeb/Maths%20Handbuilder/Design%20Docs/Physicality%20and%20Layout%20Specification.md)).
 
 ## 2. Cards and actions
 
-Players start with three cards in their hand: **+1, +2, +3**.
+Players start with three number cards: **+1, +2, +3**.
 
-Four actions are available:
+The starting scooter has a maximum capacity of **seven number cards**.
+
+Three actions are available during the adventure:
 
 | Action | Effect |
 |---|---|
 | **Attack** | Make the fish's 🎯 target to defeat it. |
 | **Buy** | Make a market card's 🎯 target to add it to your hand, or claim a treasure by making its target. |
 | **Market Refresh** | Replace all five market cards. |
-| **Pickup** | Return all played cards to your hand. |
 
-### Playing cards
+### Playing number cards
 
-Number cards follow the lifecycle: **play → discard → Pickup**.
+Number cards are reusable.
 
-Each action:
+1. Place number cards from your hand into a calculation area, in the order you want to use them.
+2. Rearrange or return cards freely before committing to an action.
+3. Perform an Attack or Buy action.
+4. Return all played number cards to your hand, whether the action succeeds or fails.
 
-1. Uses any number cards required.
-2. Discards the played number cards, except those recovered by Pickup.
-3. Costs one ⚡ bolt.
+Each physical number card may be used only once in a single calculation.
 
-Failed attacks and purchases still cost one bolt.
+**There is no discard pile or Pickup action.**
+
+Every Attack, Buy or Market Refresh costs one ⚡ bolt. Failed attacks and purchases still consume a bolt.
 
 ## 3. Making numbers
 
@@ -50,69 +53,147 @@ Calculations start at zero. Play number cards in any order, applying each operat
 
 For example:
 
-- **+8 → −1 → ×8 = 56**
-- **+8 → ×8 → −1 = 63**
+- **+3 → ×4 = 12**
+- **+2 → ×5 → +3 = 13**
+- **+3 → +2 → ×4 = 20**
 
 Operations resolve in the order played rather than conventional BEDMAS precedence.
 
-Players can create positive or negative numbers, experimenting with different sequences to reach their targets.
+### Starting operations
 
-## 4. Battery and bolts
+The baseline game contains only:
 
-The scooter has a maximum capacity of **five bolts**.
+- **Addition (+)**
+- **Multiplication (×)**
 
-Five double-sided battery cards track the remaining charge:
+Subtraction and negative numbers are reserved for future unlocks.
+
+All baseline fish and treasure targets are positive numbers.
+
+Players can experiment with different combinations before committing to an action.
+
+## 4. Scooter and hand capacity
+
+The scooter determines the maximum number of number cards a player can own.
+
+The starting scooter has **seven card slots**.
+
+Players begin with three cards, leaving four empty slots.
+
+### Buying below capacity
+
+When a player successfully buys a market card, they add it to their hand immediately.
+
+### Buying at capacity
+
+If the player already owns seven number cards, buying another requires replacing one.
+
+1. Successfully make the market card's target.
+2. Take the purchased card.
+3. Permanently remove one existing number card.
+4. Add the purchased card to the hand.
+
+The removed card leaves the current adventure and cannot be recovered.
+
+Replacement costs no additional bolts.
+
+Players cannot exceed their scooter's capacity.
+
+### Future scooters
+
+Future unlocks may introduce scooters with different hand capacities or battery characteristics.
+
+These are not implemented in v0.8.
+
+## 5. Battery and bolts
+
+The starting scooter has a maximum battery capacity of **four bolts**.
+
+Four double-sided battery cards track charge:
 
 - **Yellow ⚡:** Charged.
 - **Grey ⚡:** Depleted.
 
-Each action costs one bolt. Flip a charged battery card to its depleted side.
+Every action costs one bolt.
 
-Defeating a fish restores the number of bolts shown on its card, up to the maximum of five.
+### Defeating a fish
+
+Defeating any fish **completely refills the battery to four bolts**, regardless of its previous charge.
+
+Individual fish no longer have different recharge values.
 
 ### Running out of bolts
 
-When the last bolt is spent, the player may make one final Attack.
+When the last bolt is spent during an encounter, the player may make one final Attack.
 
-- **Success:** Defeat the fish and recharge the battery.
+- **Success:** Defeat the fish and fully recharge the battery.
 - **Failure:** The journey ends.
 
-No other actions are available at zero bolts.
+No Buy or Market Refresh actions are available at zero bolts.
 
-## 5. Fish encounters
+The final Attack does not require an additional bolt.
+
+A player who loses retains all gems collected during the adventure.
+
+## 6. Fish encounters
 
 Fish appear in a preset sequence of increasing difficulty.
 
 Each fish displays:
 
 - **🎯 Target:** The exact number required to defeat it.
-- **⚡ Recharge:** The number of bolts restored when defeated.
 
-### Defeating a fish
-
-When a fish is defeated:
-
-1. Restore the bolts shown on its card, up to the maximum of five.
-2. Pick up all played number cards.
-3. Refill empty market slots.
-4. Reveal one random treasure.
-
-After the first five fish, revealed treasures enter the treasure stockpile. Defeating the final fish awards its treasure automatically and ends the adventure.
+Fish do not display recharge values because all fish fully refill the battery.
 
 ### Initial encounter sequence
 
-| Fish | 🎯 Target | ⚡ Recharge |
-|---|---:|---:|
-| Chainsaw Clownfish | 10 | +4 |
-| Electric Eel | 16 | +3 |
-| Pufferfish | 36 | +4 |
-| Kraken Takin' a Break'n | 56 | +3 |
-| Anglerfish | −12 | +5 |
-| Great White Shark | 98 | Victory |
+| Encounter | Fish | 🎯 Target |
+|---|---|---:|
+| 1 | Chainsaw Clownfish | 10 |
+| 2 | Electric Eel | 16 |
+| 3 | Pufferfish | 36 |
+| 4 | Kraken Takin' a Break'n | 56 |
+| 5 | Great White Shark | 98 |
 
-*Recharge values are initial balancing values.*
+The Anglerfish and its negative target are removed from the baseline game and reserved for future unlockable content.
 
-## 6. The market
+### Defeating a fish
+
+For fish 1–4:
+
+1. Refill the battery to four bolts.
+2. Return all played number cards to the hand.
+3. Refill empty market slots.
+4. Reveal one random treasure and add it to the treasure stockpile.
+5. Advance to the next fish.
+
+Defeating the Great White Shark triggers the Victory Lap, described in Section 9.
+
+### Visible upcoming encounters
+
+Players can see the 🎯 target values of upcoming fish before reaching them.
+
+In the physical game, fish cards can be arranged in an overlapping stack with their target corners exposed.
+
+This allows players to plan card purchases around upcoming encounters.
+
+### Future fish selection system
+
+The intended long-term structure is:
+
+- **First fish:** Always the Chainsaw Clownfish.
+- **Middle fish:** A fixed number of encounters selected from a growing pool of unlocked fish.
+- **Final fish:** Always the Great White Shark.
+
+The baseline game contains three middle fish, giving five encounters in total.
+
+Future unlocks will expand the middle-fish pool, increasing variety between adventures.
+
+Additional fish are intended to be among the first legacy unlocks.
+
+**Prototype scope:** The five baseline fish remain in their fixed order. Random selection from the unlocked fish pool is not implemented yet.
+
+## 7. The market
 
 Five random number cards from the draw pile are displayed face-up.
 
@@ -122,27 +203,42 @@ For example:
 
 - **+4:** 🎯 4
 - **×7:** 🎯 7
-- **−3:** 🎯 3
 
 Players acquire one card per Buy action by making its target exactly.
 
-Purchased cards enter the player's hand immediately. Their market slots remain empty until the next fish is defeated.
+Purchased cards enter the player's hand immediately, subject to scooter capacity.
 
-Players may use Market Refresh to replace all five market cards at a cost of one bolt.
+Their market slots remain empty until the next fish is defeated.
 
-## 7. Treasure and gems
+Players may use Market Refresh to replace all five market cards at the cost of one bolt.
+
+### Refreshing the draw pile
+
+Market cards removed during a refresh enter a market discard pile.
+
+When the draw pile runs out, discarded market cards are reshuffled to form a new draw pile.
+
+Cards permanently removed from a player's hand do not return to the draw pile during that adventure.
+
+## 8. Treasure and gems
 
 Treasure cards form a separate deck.
 
-Each treasure displays a 🎯 target and a gem reward.
+Each treasure displays:
+
+- **🎯 Target:** The exact number required to claim it.
+- **💎 Gems:** The reward for claiming it.
+
+All baseline treasure targets are positive numbers.
 
 ### Revealing treasure
 
-Defeating a fish reveals one random treasure.
+Defeating each fish reveals one random treasure.
 
-- After fish 1–5, place it face-up in the **treasure stockpile**.
-- Unclaimed treasures remain available until the end of the adventure.
+- After fish 1–4, the treasure enters the face-up stockpile.
+- Unclaimed treasures remain available until the adventure ends.
 - The stockpile can contain multiple treasures.
+- Defeating the Great White Shark reveals one additional treasure for the Victory Lap.
 
 ### Claiming treasure
 
@@ -150,120 +246,247 @@ Use the Buy action to make a treasure's target exactly.
 
 - Collect the gems shown on the treasure.
 - Remove the claimed treasure from the stockpile.
-- Discard the number cards used and spend one bolt.
+- Return all played number cards to the hand.
+- Spend one bolt.
 
-### Final fish reward
+Failed treasure claims still consume a bolt.
 
-Defeating the Great White Shark reveals one random treasure.
-
-**Collect its gems automatically and win the game.**
+**Claiming treasure does not permanently remove number cards.**
 
 ### Keeping gems
 
-Gems are permanent rewards. Players keep all gems collected during an adventure, even if they lose.
+Gems are permanent rewards.
 
-**Prototype scope:** Track the total number of gems earned. Legacy unlocks are not implemented yet.
+Players keep all gems earned during an adventure, whether they win or lose.
 
-## 8. Legacy progression (future implementation)
+**Prototype scope:** Track the total number of gems earned. Gem spending and legacy unlocks are not implemented yet.
 
-Gems will unlock new content across multiple games.
+## 9. Victory Lap
 
-Locked content will be arranged in a fixed sequence of cards, with the next unlock's requirements displayed on its back.
+Defeating the Great White Shark ends combat and begins the **Victory Lap**.
 
-1. Earn gems by claiming treasure or defeating the final fish.
-2. Mark gem checkboxes on the next locked card.
-3. When all requirements are met, flip the card to reveal its reward.
-4. Add the unlocked card to future games and reveal the next unlock.
+This is a final opportunity to collect treasure before the adventure ends.
 
-Each unlock introduces one physical card.
+### Entering the Victory Lap
 
-Unlocked cards may introduce:
+When the shark is defeated:
 
-- New mathematical operations.
-- Alternative starting cards.
-- Additional fish.
-- New treasure types.
-- New actions or rule variations.
+1. Refill the battery to its maximum of four bolts.
+2. Return all played number cards to the hand.
+3. Refill empty market slots.
+4. Reveal one final random treasure and add it to the stockpile.
+5. Enter the Victory Lap.
 
-Some unlocks may require a second type of currency.
+**The shark does not award gems automatically.**
 
-**This entire unlock system is excluded from the current prototype. Only gem tracking is required.**
+### Victory Lap actions
 
-## 9. Draw pile distribution
+During the Victory Lap:
 
-The draw pile favours smaller additions and accessible operations, with powerful multipliers appearing less frequently.
+- Players may spend bolts attempting to claim any remaining treasures.
+- Each treasure claim costs one bolt, whether successful or unsuccessful.
+- Successfully claimed treasures award their gems and leave the stockpile.
+- Number cards return to the hand after every attempt.
+- Players cannot Attack, purchase market cards or refresh the market.
+- No additional bolts can be earned.
+
+### Ending the Victory Lap
+
+The Victory Lap ends when:
+
+- The battery reaches zero, or
+- All available treasures have been claimed.
+
+The player may also voluntarily finish early.
+
+The adventure is then complete.
+
+**Defeating the Great White Shark always counts as victory**, regardless of how much treasure is collected during the Victory Lap.
+
+All earned gems are retained for future adventures.
+
+## 10. Draw pile distribution
+
+The baseline draw pile contains only addition and multiplication.
 
 | Card | Copies per card | Total cards |
 |---|---:|---:|
 | +1 to +4 | 5 | 20 |
 | +5 to +9 | 3 | 15 |
-| −1 to −4 | 3 | 12 |
 | ×2 to ×4 | 3 | 9 |
 | ×5 to ×9 | 2 | 10 |
-| **Total** | | **66** |
+| **Total** | | **54** |
 
-The three starting cards are separate from this draw pile.
+The three starting cards are separate from the draw pile.
 
-The draw pile supplies market cards. When the draw pile runs out, its discarded cards are reshuffled to form a new draw pile.
+The draw pile supplies market cards.
 
-Treasure cards form a separate deck. Five double-sided battery cards track bolts.
+Subtraction cards are excluded from the baseline draw pile and reserved for future unlocks.
 
-## 10. Strategy and progression
+### Treasure distribution
+
+Treasure cards use a separate deck.
+
+For the current prototype, the existing provisional treasure deck may be retained, provided all targets are positive.
+
+Final treasure targets, gem rewards and rarity distribution remain subject to balancing.
+
+## 11. Strategy and progression
 
 Players balance three goals:
 
-**Survive:** Defeat fish before the scooter runs out of battery.
+**Survive:** Defeat fish within the available battery charge.
 
-**Grow stronger:** Acquire mathematical cards to create more combinations.
+**Build a versatile hand:** Acquire mathematical cards capable of making a wide range of targets within seven slots.
 
-**Collect treasure:** Spend bolts on treasure targets to earn gems.
+**Collect treasure:** Spend bolts claiming treasure to earn permanent gems.
 
-Defeating fish restores bolts, recovers played cards and replenishes the market, encouraging players to keep progressing.
+The limited hand capacity creates two phases of handbuilding:
 
-Efficient play preserves battery charge for later encounters.
+- **Growth:** Fill unused scooter slots with useful cards.
+- **Optimisation:** Replace cards to build a more effective mathematical toolkit.
 
-## 11. Winning
+Because number cards are reusable, the challenge lies in assembling the right operations for changing targets rather than managing discarded cards.
 
-Defeat the Great White Shark to complete the adventure.
+Visible upcoming fish targets allow players to plan purchases.
 
-Collect its treasure automatically as a victory reward.
+The Victory Lap provides a final payoff for treasure collection and a satisfying conclusion to a successful adventure.
 
-All gems earned during the adventure are retained, whether the player wins or loses.
+## 12. Winning and losing
+
+### Victory
+
+Defeat the Great White Shark, complete or end the Victory Lap, and finish the adventure.
+
+### Defeat
+
+Fail the final Attack when the battery is empty.
+
+### Persistent rewards
+
+All gems collected remain with the player, whether they win or lose.
+
+The next adventure begins with the baseline starting cards, scooter and battery. Purchased number cards do not carry into future adventures.
 
 ---
 
-## 12. Version history
+## 13. Legacy progression (future implementation)
 
-### v0.7
+Gems will eventually unlock new content across multiple adventures.
 
-**Changes from v0.6:**
+Locked content will be arranged in a fixed sequence of physical cards, with the next unlock's requirements displayed on its back.
 
-1. **Underwater electric scooter theme.** Monsters become bizarre sea creatures, beginning with the Chainsaw Clownfish and ending with the Great White Shark.
-2. **Bolts replace Doom.** The scooter has five double-sided battery cards. Every action depletes one bolt.
-3. **Persistent battery.** Bolts carry between encounters. Defeating a fish restores a specified number, up to the five-bolt cap.
-4. **Final Attack retained.** At zero bolts, the player gets one final Attack. Success continues the adventure; failure ends it.
-5. **Automatic Pickup.** Defeating a fish returns all played number cards to the hand.
-6. **Automatic market replenishment.** Empty market slots refill after defeating a fish. Manual Market Refresh remains available.
-7. **Fish recharge rewards.** Each fish displays its own battery recharge value, initially ranging from +3 to +5.
-8. **Battery cards replace Doom counters.** The draw pile no longer supplies face-down cards for tracking Doom.
-9. **Prototype scope clarified.** Gems are tracked, but legacy unlocks are deferred.
+The intended process is:
 
-### v0.6
+1. Earn gems by claiming treasure.
+2. Mark gem checkboxes on the next locked card.
+3. When all requirements are met, flip the card to reveal its reward.
+4. Add the unlocked content to future adventures and reveal the next unlock.
 
-1. Introduced a separate treasure deck and treasure stockpile.
-2. Added target-based treasure claiming and permanent gems.
-3. Added an automatic treasure reward for defeating the final monster.
-4. Introduced linear legacy progression with one-card-at-a-time unlocks.
+Each unlock introduces one physical card.
 
-### v0.5
+### Intended early progression
 
-1. Made Attack, Buy, Market Refresh and Pickup always-available actions.
-2. Simplified the starting hand to +1, +2 and +3.
-3. Removed Buy cards, reducing the draw pile to 66 cards.
-4. Introduced the final-chance Attack rule.
+The first unlocks should introduce **additional middle-encounter fish**.
 
-### v0.4
+This expands replayability without immediately introducing new mathematical operations or rules.
 
-- Established the original seven-card starting hand and action-card lifecycle.
-- Introduced the fixed six-monster progression.
-- Defined target-based purchasing, Doom and the weighted 71-card draw pile.
+Later unlocks may introduce:
+
+- Additional middle fish.
+- Subtraction cards.
+- Negative-target fish, including the Anglerfish.
+- Negative-target treasures.
+- Alternative starting number cards.
+- Scooters with different hand capacities.
+- Scooters with different battery capacities.
+- New treasure types.
+- New mathematical operations.
+- New actions or rule variations.
+
+Some unlocks may eventually require a second currency.
+
+### Future fish progression
+
+The future encounter system should support:
+
+- One fixed starting fish.
+- A configurable number of middle encounters.
+- A pool of available middle fish.
+- One fixed final fish.
+
+When additional fish are unlocked, middle encounters will be selected from the available pool.
+
+Fish selection should eventually respect difficulty progression, although the exact selection and ordering rules are not yet defined.
+
+### Unlock data file
+
+The coding agent should prepare a **separate structured unlock data file** to support future legacy progression.
+
+Each unlock record should support:
+
+| Field | Purpose |
+|---|---|
+| `id` | Unique unlock identifier |
+| `order` | Position in the unlock sequence |
+| `name` | Display name |
+| `description` | Explanation of the reward |
+| `type` | Fish, operation, scooter, treasure, starting card, etc. |
+| `gemCost` | Gems required to unlock |
+| `secondaryCost` | Optional second currency requirement |
+| `prerequisites` | Required earlier unlocks |
+| `contentIds` | References to content introduced by the unlock |
+| `status` | Planned or defined |
+
+The file should contain an initial editable unlock sequence beginning with additional fish.
+
+Later entries may describe planned subtraction, negative-number and scooter content without finalising their values or costs.
+
+The game data architecture should distinguish between baseline content and unlockable content.
+
+### Implementation restriction
+
+**Do not implement legacy progression in v0.8.**
+
+Specifically:
+
+- Do not implement gem spending.
+- Do not implement unlock UI or checkbox progression.
+- Do not implement alternative scooters.
+- Do not activate subtraction or negative-number content.
+- Do not implement randomised middle-fish selection.
+- Do not introduce unlockable content into the baseline game.
+
+Only create the unlock data file and supporting content definitions. Please MOVE THE EXISTING SUBTRACTION DATA into the unlock file, but put it behind to example unlocked fish.
+
+Gem tracking remains active.
+
+---
+
+## 14. Version history
+
+### v0.8
+
+**Changes from v0.7, incorporating v0.7B and subsequent playtesting:**
+
+1. **Seven-card hand capacity.** The starting scooter holds up to seven number cards.
+2. **Card replacement.** Buying at capacity requires permanently removing an existing card.
+3. **Reusable number cards.** Cards return to the hand after every Attack or Buy, including failed actions.
+4. **Discard pile removed.** Played number cards are no longer discarded.
+5. **Pickup action removed.** Only Attack, Buy and Market Refresh remain.
+6. **Four-bolt battery.** Maximum and starting charge reduced from five to four.
+7. **Full recharge.** Defeating any fish refills the battery completely.
+8. **Fish recharge values removed.** Fish cards no longer display individual recharge amounts.
+9. **Subtraction deferred.** The baseline game includes only addition and multiplication.
+10. **Positive-only targets.** Negative fish and treasure targets are reserved for future unlocks.
+11. **Five-fish adventure.** The Anglerfish is removed from the baseline sequence.
+12. **Upcoming targets visible.** Future fish target values are visible during play.
+13. **Future fish-pool system defined.** First and final fish are fixed, with middle encounters eventually drawn from unlocked fish.
+14. **Fish unlocks prioritised.** Early unlocks expand encounter variety before mathematical complexity.
+15. **54-card draw pile.** The original 66-card distribution is reduced by removing 12 subtraction cards.
+16. **Victory Lap introduced.** Defeating the Great White Shark begins a final treasure-claiming phase.
+17. **No automatic final treasure reward.** The shark reveals a treasure but does not award its gems automatically.
+18. **Full recharge for Victory Lap.** The player enters the final treasure phase with four bolts.
+19. **Treasure-only Victory Lap.** Players can claim remaining treasures but cannot buy market cards, refresh or attack.
+20. **Unlock data preparation.** The coding agent must prepare the future unlock data file without implementing legacy progression.
+

@@ -1,5 +1,5 @@
 /**
- * UI Renderer and Event Controller for Maths Handbuilder Prototype (v0.7 Underwater Scooter)
+ * UI Renderer and Event Controller for Maths Handbuilder Prototype (v0.8)
  */
 import { GameState } from './game.js';
 import { FISH_ART } from './fish_art.js';
@@ -7,7 +7,7 @@ import { FISH_ART } from './fish_art.js';
 export class GameUI {
   constructor() {
     this.game = new GameState();
-    this.selectedSequence = []; // Array of number cards selected from hand
+    this.selectedSequence = []; // Array of number cards selected from hand onto workbench
     this.selectedTarget = null; // { type: 'market' | 'stockpile', index: number } | null
     this.showCalculator = false; // Default: OFF (physical card simulation with mental math)
 
@@ -20,7 +20,6 @@ export class GameUI {
     // Fish Encounter Elements
     this.monsterNameEl = document.getElementById('monster-name');
     this.monsterTargetEl = document.getElementById('monster-target');
-    this.fishRechargeValEl = document.getElementById('fish-recharge-val');
     this.batteryCountTextEl = document.getElementById('battery-count-text');
     this.batteryCardsRowEl = document.getElementById('battery-cards-row');
     this.creatureArtEl = document.getElementById('creature-art');
@@ -38,16 +37,16 @@ export class GameUI {
     this.chkAutoCalc = document.getElementById('chk-auto-calc');
     this.debugChkAutoCalc = document.getElementById('debug-chk-auto-calc');
 
-    // Hand & Discard Elements (LHS)
+    // Hand Elements (LHS)
     this.handNumberCardsEl = document.getElementById('hand-number-cards');
-    this.discardPreviewCountEl = document.getElementById('discard-preview-count');
-    this.discardPreviewCardsEl = document.getElementById('discard-preview-cards');
+    this.handReplacementAlert = document.getElementById('hand-replacement-alert');
+    this.replacementPromptText = document.getElementById('replacement-prompt-text');
+    this.btnCancelReplacement = document.getElementById('btn-cancel-replacement');
 
     // Action Buttons
     this.btnAttack = document.getElementById('btn-action-attack');
     this.btnBuy = document.getElementById('btn-action-buy');
     this.btnRefresh = document.getElementById('btn-action-refresh');
-    this.btnPickup = document.getElementById('btn-action-pickup');
 
     // Top Bar & End Run Buttons
     this.btnEndRun = document.getElementById('btn-end-run');
@@ -57,7 +56,6 @@ export class GameUI {
     this.statBatteryCount = document.getElementById('stat-battery-count');
     this.statDrawCount = document.getElementById('stat-draw-count');
     this.statDiscardCount = document.getElementById('stat-discard-count');
-    this.statPlayerDiscardCount = document.getElementById('stat-player-discard-count');
     this.statHandCount = document.getElementById('stat-hand-count');
     this.statGemCount = document.getElementById('stat-gem-count');
     this.statStashCount = document.getElementById('stat-stash-count');
@@ -88,8 +86,18 @@ export class GameUI {
     this.btnAttack.addEventListener('click', () => this.handleAttack());
     this.btnBuy.addEventListener('click', () => this.handleBuy());
     this.btnRefresh.addEventListener('click', () => this.handleMarketRefresh());
-    this.btnPickup.addEventListener('click', () => this.handlePickup());
     this.clearSequenceBtn.addEventListener('click', () => this.clearSelection());
+
+    // Card Replacement Cancel Button
+    if (this.btnCancelReplacement) {
+      this.btnCancelReplacement.addEventListener('click', () => {
+        if (this.game.pendingPurchase) {
+          this.game.addLog(`Aborted card replacement.`, 'info');
+          this.game.pendingPurchase = null;
+          this.render();
+        }
+      });
+    }
 
     // Auto-Calculator Debug Toggle (in Workbench header and debug panel)
     const setCalculatorToggle = (enabled) => {
@@ -165,7 +173,7 @@ export class GameUI {
   }
 
   autoSelectMatchingTarget(calcTotal) {
-    if (!this.showCalculator) return; // Do not auto-select when calculator hints are disabled
+    if (!this.showCalculator) return;
 
     if (this.selectedTarget !== null) {
       const current = (this.selectedTarget.type === 'stockpile')
@@ -183,7 +191,6 @@ export class GameUI {
       } else if (marketMatchIdx !== -1 && stockMatchIdx === -1) {
         this.selectedTarget = { type: 'market', index: marketMatchIdx };
       } else if (marketMatchIdx !== -1 && stockMatchIdx !== -1 && !this.selectedTarget) {
-        // Prefer stockpile if in post_game
         this.selectedTarget = (this.game.status === 'post_game')
           ? { type: 'stockpile', index: stockMatchIdx }
           : { type: 'market', index: marketMatchIdx };
@@ -195,6 +202,17 @@ export class GameUI {
     if (this.game.status !== 'in_progress' && this.game.status !== 'post_game') return;
 
     const cardId = card.uid || card.id;
+
+    // If a card purchase is pending replacement at 7/7 capacity, clicking replaces it!
+    if (this.game.pendingPurchase) {
+      const repRes = this.game.replaceAndAcquire(cardId);
+      if (repRes.success) {
+        this.clearSelection();
+      }
+      this.render();
+      return;
+    }
+
     const existingIndex = this.selectedSequence.findIndex(c => (c.uid || c.id) === cardId);
 
     if (existingIndex >= 0) {
@@ -215,6 +233,10 @@ export class GameUI {
     if (this.game.status !== 'in_progress' && this.game.status !== 'post_game') return;
     if (this.game.isFinalAttack && this.game.status === 'in_progress') {
       alert('Scooter is out of battery! Only Final Attack is available.');
+      return;
+    }
+    if (this.game.status === 'post_game' && type !== 'stockpile') {
+      alert('Market purchases are closed after defeating the Great White Shark. Spend your remaining energy claiming stockpile treasures!');
       return;
     }
 
@@ -261,11 +283,13 @@ export class GameUI {
     if (this.selectedTarget === null) {
       if (this.showCalculator) {
         const matchingMarket = [];
-        this.game.market.forEach((card, idx) => {
-          if (card && card.target === calc.total) {
-            matchingMarket.push({ type: 'market', index: idx, card });
-          }
-        });
+        if (this.game.status === 'in_progress') {
+          this.game.market.forEach((card, idx) => {
+            if (card && card.target === calc.total) {
+              matchingMarket.push({ type: 'market', index: idx, card });
+            }
+          });
+        }
 
         const matchingStockpile = [];
         this.game.treasureStockpile.forEach((card, idx) => {
@@ -294,7 +318,9 @@ export class GameUI {
     const res = this.game.playBuy(this.selectedTarget.type, this.selectedTarget.index, this.selectedSequence);
     if (res.success) {
       this.clearSelection();
-      this.selectedTarget = null;
+      if (!res.needsReplacement) {
+        this.selectedTarget = null;
+      }
     }
     this.render();
   }
@@ -316,18 +342,6 @@ export class GameUI {
     this.render();
   }
 
-  handlePickup() {
-    if (this.game.status !== 'in_progress' && this.game.status !== 'post_game') return;
-
-    if (this.game.isFinalAttack && this.game.status === 'in_progress') {
-      alert('Scooter is out of battery! No other actions are available. You must make your Final Attack now!');
-      return;
-    }
-
-    this.game.playPickup();
-    this.render();
-  }
-
   render() {
     const g = this.game;
     const fish = g.currentMonster;
@@ -342,9 +356,6 @@ export class GameUI {
         ? `${fish.name} (Defeated! 🏆)`
         : `Encounter ${g.currentMonsterIndex + 1}/${g.monstersList.length}: ${fish.name}`;
       this.monsterTargetEl.textContent = fish.target;
-      if (this.fishRechargeValEl) {
-        this.fishRechargeValEl.textContent = typeof fish.recharge === 'number' ? `+${fish.recharge}` : fish.recharge;
-      }
       if (this.batteryCountTextEl) {
         this.batteryCountTextEl.textContent = `${g.currentBolts} / ${g.maxBolts} Bolts`;
       }
@@ -352,12 +363,12 @@ export class GameUI {
         this.statBatteryCount.textContent = g.currentBolts;
       }
 
-      // Render funny placeholder vector graphic
+      // Render vector graphic
       if (this.creatureArtEl) {
         this.creatureArtEl.innerHTML = FISH_ART[fish.id] || '';
       }
 
-      // Render 5 double-sided battery cards
+      // Render 4 double-sided battery cards (v0.8)
       if (this.batteryCardsRowEl) {
         let batteryCardsHtml = '';
         for (let i = 0; i < g.maxBolts; i++) {
@@ -375,10 +386,9 @@ export class GameUI {
     } else {
       this.monsterNameEl.textContent = 'All Sea Creatures Defeated!';
       this.monsterTargetEl.textContent = '-';
-      if (this.fishRechargeValEl) this.fishRechargeValEl.textContent = '-';
       if (this.batteryCountTextEl) this.batteryCountTextEl.textContent = '-';
       if (this.batteryCardsRowEl) this.batteryCardsRowEl.innerHTML = '';
-      if (this.creatureArtEl) this.creatureArtEl.innerHTML = FISH_ART[6] || '';
+      if (this.creatureArtEl) this.creatureArtEl.innerHTML = FISH_ART[5] || '';
     }
 
     // Auto-select target if calculation matches and auto-calc is enabled
@@ -401,30 +411,38 @@ export class GameUI {
           </div>
         `;
       } else {
-        slotEl.className = `portrait-card market-card op-${card.op === '×' ? 'mult' : (card.op === '-' ? 'sub' : 'add')}`;
+        slotEl.className = `portrait-card market-card op-${card.op === '×' ? 'mult' : 'add'}`;
+        if (isPostGame) {
+          slotEl.classList.add('market-card-closed');
+          slotEl.style.opacity = '0.45';
+          slotEl.style.cursor = 'not-allowed';
+        }
+
         const isSelected = (this.selectedTarget?.type === 'market' && this.selectedTarget?.index === idx);
         const isMatched = this.showCalculator && (this.selectedSequence.length > 0 && calc.total === card.target);
 
-        if (isSelected) slotEl.classList.add('selected');
-        if (isMatched && !isFinalAttack) slotEl.classList.add('matched');
+        if (isSelected && !isPostGame) slotEl.classList.add('selected');
+        if (isMatched && !isFinalAttack && !isPostGame) slotEl.classList.add('matched');
 
         let matchBadge = '';
-        if (isMatched && !isFinalAttack) {
+        if (isMatched && !isFinalAttack && !isPostGame) {
           matchBadge = `<div class="card-match-indicator">✨ MATCH! (Click to Buy)</div>`;
         }
 
         slotEl.innerHTML = `
           <div class="card-corner-top">${card.label}</div>
           <div class="card-center-val">${card.label}</div>
-          <div class="card-target-bottom ${card.target < 0 ? 'neg-target' : ''}">🎯 ${card.target}</div>
+          <div class="card-target-bottom">🎯 ${card.target}</div>
           ${matchBadge}
         `;
-        slotEl.addEventListener('click', () => this.selectTarget('market', idx));
+        if (!isPostGame) {
+          slotEl.addEventListener('click', () => this.selectTarget('market', idx));
+        }
       }
       this.marketSlotsEl.appendChild(slotEl);
     });
 
-    // 3. Treasure Stockpile Slots (Clean: NO "Composite (3gem)" text)
+    // 3. Treasure Stockpile Slots
     if (this.stockpileSlotsEl) {
       this.stockpileSlotsEl.innerHTML = '';
       if (g.treasureStockpile.length === 0) {
@@ -445,11 +463,10 @@ export class GameUI {
             matchBadge = `<div class="card-match-indicator">✨ MATCH! (Click to Claim)</div>`;
           }
 
-          // Clean treasure display: gem corner, gem icons in center, and target badge at bottom
           slotEl.innerHTML = `
             <div class="card-corner-top">💎 ${card.gems}</div>
             <div class="card-center-gems">${card.label}</div>
-            <div class="card-target-bottom ${card.target < 0 ? 'neg-target' : ''}">🎯 ${card.target}</div>
+            <div class="card-target-bottom">🎯 ${card.target}</div>
             ${matchBadge}
           `;
           slotEl.addEventListener('click', () => this.selectTarget('stockpile', idx));
@@ -458,10 +475,9 @@ export class GameUI {
       }
     }
 
-    // 4. Calculation Workbench: Moving cards onto playmat as they are clicked!
+    // 4. Calculation Workbench
     this.formulaChainEl.innerHTML = '';
 
-    // Always display Starting 0 Base Card
     const startCardEl = document.createElement('div');
     startCardEl.className = 'workbench-start-card';
     startCardEl.innerHTML = `
@@ -485,7 +501,7 @@ export class GameUI {
 
         const card = step.card;
         const cardEl = document.createElement('div');
-        cardEl.className = `portrait-card workbench-card op-${card.op === '×' ? 'mult' : (card.op === '-' ? 'sub' : 'add')}`;
+        cardEl.className = `portrait-card workbench-card op-${card.op === '×' ? 'mult' : 'add'}`;
         cardEl.title = 'Click to return this card to your hand';
         const stepBadge = this.showCalculator ? `<div class="card-calc-step">= ${step.result}</div>` : '';
         cardEl.innerHTML = `
@@ -507,7 +523,7 @@ export class GameUI {
       });
     }
 
-    // Evaluated Total Display (Only shown when auto-calculator debug toggle is ON)
+    // Evaluated Total Display
     if (this.formulaResultContainer) {
       if (this.showCalculator) {
         this.formulaResultContainer.classList.remove('hidden-calc');
@@ -518,7 +534,7 @@ export class GameUI {
       }
     }
 
-    // Target comparison feedback (Only shown when auto-calculator debug toggle is ON)
+    // Target comparison feedback
     let comparisonText = '';
     const selectedTargetCard = this.selectedTarget !== null
       ? (this.selectedTarget.type === 'stockpile' ? g.treasureStockpile[this.selectedTarget.index] : g.market[this.selectedTarget.index])
@@ -544,41 +560,49 @@ export class GameUI {
     }
     this.formulaComparisonEl.innerHTML = comparisonText;
 
-    // 5. Hand Display: Only cards NOT placed on workbench remain in hand!
+    // 5. Hand Display: Number cards are reusable!
     this.handNumberCardsEl.innerHTML = '';
+    const isReplacing = !!g.pendingPurchase;
+
+    if (this.handReplacementAlert) {
+      if (isReplacing) {
+        this.handReplacementAlert.classList.remove('hidden');
+        if (this.replacementPromptText) {
+          this.replacementPromptText.textContent = `Click any card below to permanently replace it with ${g.pendingPurchase.card.label} (🎯 ${g.pendingPurchase.card.target}).`;
+        }
+      } else {
+        this.handReplacementAlert.classList.add('hidden');
+      }
+    }
+
     const selectedIds = new Set(this.selectedSequence.map(c => c.uid || c.id));
-    const cardsInHand = g.hand.filter(c => !selectedIds.has(c.uid || c.id));
+    const cardsInHand = isReplacing
+      ? g.hand // When replacing, show all cards in hand
+      : g.hand.filter(c => !selectedIds.has(c.uid || c.id));
 
     if (cardsInHand.length === 0) {
-      this.handNumberCardsEl.innerHTML = this.selectedSequence.length > 0
-        ? '<div class="empty-hand-hint">All cards from your hand are on the Calculation Workbench. Click any card on the workbench to return it to your hand.</div>'
-        : '<div class="empty-hand-hint">Hand is empty! Play <strong>✋ Pickup</strong> to recover your played cards.</div>';
+      this.handNumberCardsEl.innerHTML = '<div class="empty-hand-hint">All cards from your hand are on the Calculation Workbench. Click any card on the workbench to return it to your hand.</div>';
     } else {
       cardsInHand.forEach(c => {
         const cardEl = document.createElement('div');
-        cardEl.className = `portrait-card game-card number-card op-${c.op === '×' ? 'mult' : (c.op === '-' ? 'sub' : 'add')}`;
-        cardEl.title = 'Click to place this card onto the Calculation Workbench';
+        cardEl.className = `portrait-card game-card number-card op-${c.op === '×' ? 'mult' : 'add'}`;
+        if (isReplacing) {
+          cardEl.classList.add('selectable-for-replacement');
+          cardEl.title = `Click to PERMANENTLY REMOVE ${c.label} and add ${g.pendingPurchase.card.label}`;
+        } else {
+          cardEl.title = 'Click to place this card onto the Calculation Workbench';
+        }
+
+        const replaceTag = isReplacing ? `<div class="card-match-indicator" style="background:#d97706;">SCRAP</div>` : '';
+
         cardEl.innerHTML = `
           <div class="card-corner-top">${c.label}</div>
           <div class="card-center-val">${c.label}</div>
           <div class="card-target-bottom">🎯 ${c.target}</div>
+          ${replaceTag}
         `;
         cardEl.addEventListener('click', () => this.toggleNumberCardSelection(c));
         this.handNumberCardsEl.appendChild(cardEl);
-      });
-    }
-
-    // Discard Pile Preview
-    this.discardPreviewCountEl.textContent = g.playerDiscard.length;
-    this.discardPreviewCardsEl.innerHTML = '';
-    if (g.playerDiscard.length === 0) {
-      this.discardPreviewCardsEl.innerHTML = '<span class="placeholder-sm">No cards in discard</span>';
-    } else {
-      g.playerDiscard.forEach(c => {
-        const dEl = document.createElement('div');
-        dEl.className = `mini-card op-${c.op === '×' ? 'mult' : (c.op === '-' ? 'sub' : 'add')}`;
-        dEl.textContent = c.label;
-        this.discardPreviewCardsEl.appendChild(dEl);
       });
     }
 
@@ -587,16 +611,15 @@ export class GameUI {
     const targetCard = selectedTargetCard;
     const matchesTarget = (targetCard && calc.total === targetCard.target);
 
-    // Helpers only active when showCalculator is true
     const showMatchMonster = this.showCalculator && matchesFish;
     const showMatchTarget = this.showCalculator && matchesTarget;
 
     if (isPostGame) {
-      // POST-GAME TREASURE CLAIMING PHASE: Can spend remaining bolts on treasures!
+      // POST-SHARK ENERGY PHASE
       this.btnAttack.disabled = true;
       this.btnAttack.classList.remove('final-attack-mode', 'ready-to-act');
       this.btnAttack.querySelector('.btn-title').textContent = '⚔️ All Fish Defeated!';
-      this.btnAttack.querySelector('.btn-sub').textContent = 'Great White Shark conquered!';
+      this.btnAttack.querySelector('.btn-sub').textContent = 'Shark conquered!';
 
       this.btnBuy.classList.remove('locked-action');
       if (targetCard && this.selectedTarget) {
@@ -607,31 +630,18 @@ export class GameUI {
           this.btnBuy.querySelector('.btn-sub').textContent = showMatchTarget
             ? `Claim +${targetCard.gems} 💎 to Treasure Chest! (Costs 1 ⚡)`
             : `Treasure target is 🎯 ${targetCard.target} (Costs 1 ⚡)`;
-        } else {
-          this.btnBuy.querySelector('.btn-title').textContent = showMatchTarget
-            ? `🛒 Buy ${targetCard.label} (🎯 Matched!)`
-            : `🛒 Buy ${targetCard.label}`;
-          this.btnBuy.querySelector('.btn-sub').textContent = showMatchTarget
-            ? `Ready to acquire into hand! (Costs 1 ⚡)`
-            : `Market target is 🎯 ${targetCard.target} (Costs 1 ⚡)`;
         }
       } else {
         this.btnBuy.querySelector('.btn-title').textContent = '💎 Claim Treasure';
         this.btnBuy.querySelector('.btn-sub').textContent = `Spend remaining bolts (${g.currentBolts} ⚡) on stockpile treasures`;
       }
-      this.btnBuy.disabled = g.currentBolts <= 0;
-      this.btnBuy.classList.toggle('ready-to-act', !!showMatchTarget && g.currentBolts > 0);
+      this.btnBuy.disabled = g.currentBolts <= 0 || isReplacing;
+      this.btnBuy.classList.toggle('ready-to-act', !!showMatchTarget && g.currentBolts > 0 && !isReplacing);
 
       this.btnRefresh.disabled = true;
       this.btnRefresh.classList.add('locked-action');
-      this.btnRefresh.querySelector('.btn-title').textContent = '🔄 Refresh (Finished)';
-      this.btnRefresh.querySelector('.btn-sub').textContent = 'All encounters complete';
-
-      this.btnPickup.disabled = g.currentBolts <= 0;
-      this.btnPickup.classList.remove('locked-action');
-      this.btnPickup.querySelector('.btn-title').textContent = `✋ Pickup (${g.playerDiscard.length})`;
-      this.btnPickup.querySelector('.btn-sub').textContent = g.playerDiscard.length > 0 ? 'Return all discard to hand (Costs 1 ⚡)' : 'No cards in discard';
-      this.btnPickup.classList.toggle('ready-to-act', g.playerDiscard.length > 0 && g.currentBolts > 0);
+      this.btnRefresh.querySelector('.btn-title').textContent = '🔄 Market Closed';
+      this.btnRefresh.querySelector('.btn-sub').textContent = 'Encounters complete';
     } else if (isFinalAttack) {
       // FINAL ATTACK MODE: Only Attack is available!
       this.btnAttack.disabled = false;
@@ -650,16 +660,10 @@ export class GameUI {
       this.btnRefresh.classList.add('locked-action');
       this.btnRefresh.querySelector('.btn-title').textContent = '🔄 Refresh (No Battery)';
       this.btnRefresh.querySelector('.btn-sub').textContent = 'Unavailable at 0 bolts';
-
-      this.btnPickup.disabled = true;
-      this.btnPickup.classList.add('locked-action');
-      this.btnPickup.classList.remove('ready-to-act');
-      this.btnPickup.querySelector('.btn-title').textContent = '✋ Pickup (No Battery)';
-      this.btnPickup.querySelector('.btn-sub').textContent = 'Unavailable at 0 bolts';
     } else {
-      // NORMAL MODE: All actions available
+      // NORMAL COMBAT MODE
       this.btnAttack.classList.remove('final-attack-mode');
-      this.btnAttack.classList.toggle('ready-to-act', showMatchMonster);
+      this.btnAttack.classList.toggle('ready-to-act', showMatchMonster && !isReplacing);
       this.btnAttack.querySelector('.btn-title').textContent = showMatchMonster ? '⚔️ Attack (🎯 Matched!)' : '⚔️ Attack';
       this.btnAttack.querySelector('.btn-sub').textContent = showMatchMonster ? 'Defeat creature & recharge!' : `Hit ${fish?.name} 🎯 ${fish?.target} (Costs 1 ⚡)`;
 
@@ -684,37 +688,29 @@ export class GameUI {
         this.btnBuy.querySelector('.btn-title').textContent = '🛒 Buy / Claim';
         this.btnBuy.querySelector('.btn-sub').textContent = 'Match a Market card or Treasure target (Costs 1 ⚡)';
       }
-      this.btnBuy.classList.toggle('ready-to-act', !!showMatchTarget);
+      this.btnBuy.classList.toggle('ready-to-act', !!showMatchTarget && !isReplacing);
 
       this.btnRefresh.classList.remove('locked-action');
       this.btnRefresh.querySelector('.btn-title').textContent = '🔄 Market Refresh';
       this.btnRefresh.querySelector('.btn-sub').textContent = 'Discard market & deal 5 new cards (Costs 1 ⚡)';
 
-      this.btnPickup.classList.remove('locked-action');
-      this.btnPickup.querySelector('.btn-title').textContent = `✋ Pickup (${g.playerDiscard.length})`;
-      this.btnPickup.querySelector('.btn-sub').textContent = g.playerDiscard.length > 0 ? 'Return all discard to hand (Costs 1 ⚡)' : 'No cards in discard yet (Costs 1 ⚡)';
-      this.btnPickup.classList.toggle('ready-to-act', g.playerDiscard.length > 0);
-
-      this.btnAttack.disabled = g.status !== 'in_progress';
-      this.btnBuy.disabled = g.status !== 'in_progress';
-      this.btnRefresh.disabled = g.status !== 'in_progress';
-      this.btnPickup.disabled = g.status !== 'in_progress';
+      this.btnAttack.disabled = g.status !== 'in_progress' || isReplacing;
+      this.btnBuy.disabled = g.status !== 'in_progress' || isReplacing;
+      this.btnRefresh.disabled = g.status !== 'in_progress' || isReplacing;
     }
 
-    // 7. Pile & Deck Stats
+    // 7. Stats Bar
     this.statDrawCount.textContent = g.drawPile.length;
     this.statDiscardCount.textContent = g.drawDiscard.length;
-    this.statPlayerDiscardCount.textContent = g.playerDiscard.length;
     this.statHandCount.textContent = g.hand.length;
     if (this.statGemCount) this.statGemCount.textContent = g.totalGems;
     if (this.statStashCount) this.statStashCount.textContent = GameState.getPermanentGems();
 
-    // End run button state
     if (this.btnEndRun) {
       this.btnEndRun.disabled = (g.status === 'won' || g.status === 'lost');
     }
 
-    // 8. Treasure Chest (LHS bottom)
+    // 8. Treasure Chest
     if (this.treasureGemsRunEl) {
       this.treasureGemsRunEl.textContent = `${g.totalGems} 💎`;
     }
@@ -751,10 +747,10 @@ export class GameUI {
     if (isPostGame) {
       this.gameBannerEl.className = 'status-banner victory';
       this.gameBannerEl.innerHTML = `
-        <div>🏆 <strong>GREAT WHITE SHARK DEFEATED!</strong> You have <strong>${g.currentBolts} ⚡ bolt${g.currentBolts > 1 ? 's' : ''} remaining</strong>!</div>
-        <div class="victory-bonus-box">You may spend remaining bolts to claim any leftover treasures in the stockpile, or hit <strong>End Run</strong> to bank what you have!</div>
+        <div>🏆 <strong>GREAT WHITE SHARK DEFEATED!</strong> Scooter battery refilled (<strong>${g.currentBolts}/${g.maxBolts} ⚡</strong>).</div>
+        <div class="victory-bonus-box">Spend your remaining energy claiming any remaining treasures in the stockpile, or conclude your adventure to bank your gems!</div>
         <div style="display: flex; gap: 8px; margin-top: 6px;">
-          <button id="btn-banner-end-run" class="btn-primary">⚓ End Run & Bank Haul</button>
+          <button id="btn-banner-end-run" class="btn-primary">⚓ Conclude Adventure & Bank Haul</button>
         </div>
       `;
       document.getElementById('btn-banner-end-run')?.addEventListener('click', () => {
@@ -763,12 +759,8 @@ export class GameUI {
       });
     } else if (g.status === 'won') {
       this.gameBannerEl.className = 'status-banner victory';
-      const victoryBonusHtml = g.victoryTreasure
-        ? `<div class="victory-bonus-box">🏆 Great White Shark Defeated! Final Treasure: <strong>${g.victoryTreasure.label} (🎯 Target ${g.victoryTreasure.target}) +${g.victoryTreasure.gems} 💎</strong> automatically claimed!</div>`
-        : '';
       this.gameBannerEl.innerHTML = `
         <div>🏆 <strong>ADVENTURE COMPLETED!</strong> You conquered the underwater world!</div>
-        ${victoryBonusHtml}
         <div class="victory-stats">Adventure Score: <strong>💎 ${g.totalGems} Gems</strong> (${g.treasureChest.length} treasures) • Total Legacy Stash: <strong>💎 ${GameState.getPermanentGems()} Gems</strong></div>
         <button id="btn-banner-restart" class="btn-primary" style="margin-top: 8px;">Ride Again</button>
       `;
