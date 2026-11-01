@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Maths_Handbuilder_Card_Content_v6(1).xlsx",
-  "importedAt": "2026-11-01T23:27:58.762Z",
+  "importedAt": "2026-11-01T23:39:32.784Z",
   "seaOrder": [
     "A",
     "B",
@@ -89,10 +89,10 @@ export const GAME_DATA = {
       "name": "Multiplication Reef",
       "description": "Get used to multiplying x3,x4,x5",
       "mathsFocus": "×3, ×4, ×5",
-      "encounterRulesText": "Random pool or sea-specific fish roster",
+      "encounterRulesText": "Start with Lionfish",
       "fishPerAdventure": 5,
       "randomised": true,
-      "startFishId": null,
+      "startFishId": "B_Fish",
       "finalFishId": null,
       "fixedFishIds": null,
       "newNumberCardsText": "x3,x4,x5"
@@ -284,7 +284,7 @@ export const GAME_DATA = {
       "sea": "E",
       "name": "Quad Bike Scooter",
       "battery": 5,
-      "handCapacity": 7,
+      "handCapacity": 8,
       "startingHand": [
         {
           "op": "+",
