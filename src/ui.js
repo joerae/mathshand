@@ -1,12 +1,47 @@
 /**
- * UI Renderer and Event Controller for Maths Handbuilder Prototype (v0.8)
+ * UI Renderer and Event Controller for Maths Handbuilder Prototype (v0.10 – Seven Seas)
  */
 import { GameState } from './game.js';
 import { FISH_ART } from './fish_art.js';
+import {
+  GAME_DATA, SEA_ORDER, getSea, scootersForSea, defaultScooterForSea,
+  buildDrawPile, buildTreasureDeck, isUnlocked
+} from '../data/content.js';
+
+const SELECTION_KEY = 'maths_handbuilder_last_selection';
+
+/** Maps spreadsheet fish names to the existing SVG artwork. */
+function fishArtFor(fish) {
+  const n = (fish?.name || '').toLowerCase();
+  if (n.includes('clownfish')) return FISH_ART[1];
+  if (n.includes('electric eel')) return FISH_ART[2];
+  if (n.includes('puffer')) return FISH_ART[3];
+  if (n.includes('kraken')) return FISH_ART[4];
+  if (n.includes('great white')) return FISH_ART[5];
+  // Generic placeholder fish, tinted per fish
+  let hash = 0;
+  for (const ch of fish?.id || '') hash = (hash * 31 + ch.charCodeAt(0)) % 360;
+  return `
+    <svg viewBox="0 0 160 120" class="fish-svg" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="72" cy="60" rx="46" ry="28" fill="hsl(${hash},70%,60%)" stroke="hsl(${hash},60%,35%)" stroke-width="2.5"/>
+      <path d="M28 60 L8 40 L14 60 L8 80 Z" fill="hsl(${hash},70%,55%)" stroke="hsl(${hash},60%,35%)" stroke-width="2.5"/>
+      <circle cx="100" cy="52" r="7" fill="#fff" stroke="#1f2937" stroke-width="1.5"/>
+      <circle cx="102" cy="52" r="3" fill="#1f2937"/>
+      <path d="M108 70 Q114 72 118 68" stroke="#1f2937" stroke-width="2" fill="none"/>
+      <text x="72" y="112" text-anchor="middle" font-size="11" fill="#64748b">${fish?.name || ''}</text>
+    </svg>`;
+}
+
+function opClass(card) {
+  if (card.op === '×') return 'op-mult';
+  if (card.op === '-') return 'op-sub';
+  return 'op-add';
+}
 
 export class GameUI {
   constructor() {
-    this.game = new GameState();
+    this.selection = this.loadSelection();
+    this.game = new GameState({ sea: this.selection.sea, scooterId: this.selection.scooterId });
     this.selectedSequence = []; // Array of number cards selected from hand onto workbench
     this.selectedTarget = null; // { type: 'market' | 'stockpile', index: number } | null
     this.showCalculator = false; // Default: OFF (physical card simulation with mental math)
@@ -14,6 +49,23 @@ export class GameUI {
     this.cacheElements();
     this.bindEvents();
     this.render();
+    this.openSeaSelect();
+  }
+
+  loadSelection() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SELECTION_KEY) || 'null');
+      if (saved && getSea(saved.sea)) {
+        const scooters = scootersForSea(saved.sea);
+        if (!scooters.some(s => s.id === saved.scooterId)) saved.scooterId = defaultScooterForSea(saved.sea)?.id;
+        return saved;
+      }
+    } catch (e) { /* ignore */ }
+    return { sea: SEA_ORDER[0], scooterId: defaultScooterForSea(SEA_ORDER[0])?.id };
+  }
+
+  saveSelection() {
+    try { localStorage.setItem(SELECTION_KEY, JSON.stringify(this.selection)); } catch (e) { /* ignore */ }
   }
 
   cacheElements() {
@@ -40,8 +92,35 @@ export class GameUI {
     // Hand Elements (LHS)
     this.handNumberCardsEl = document.getElementById('hand-number-cards');
     this.handReplacementAlert = document.getElementById('hand-replacement-alert');
+    this.replacementTitle = document.getElementById('replacement-title');
     this.replacementPromptText = document.getElementById('replacement-prompt-text');
     this.btnCancelReplacement = document.getElementById('btn-cancel-replacement');
+    this.handDiscardAlert = document.getElementById('hand-discard-alert');
+    this.discardTitle = document.getElementById('discard-title');
+    this.discardPromptText = document.getElementById('discard-prompt-text');
+
+    // Fish extras
+    this.fishAbilityEl = document.getElementById('fish-ability');
+    this.upcomingFishEl = document.getElementById('upcoming-fish');
+    this.batteryHelpEl = document.getElementById('battery-help');
+
+    // Quests
+    this.questListEl = document.getElementById('quest-list');
+    this.questGemsEl = document.getElementById('quest-gems');
+    this.questPanelTitleEl = document.getElementById('quest-panel-title');
+
+    // Sea selection
+    this.btnCurrentSea = document.getElementById('btn-current-sea');
+    this.btnNewAdventure = document.getElementById('btn-new-adventure');
+    this.seaOverlay = document.getElementById('sea-select-overlay');
+    this.seaOptionsEl = document.getElementById('sea-options');
+    this.scooterOptionsEl = document.getElementById('scooter-options');
+    this.seaPreviewEl = document.getElementById('sea-preview');
+    this.btnStartAdventure = document.getElementById('btn-start-adventure');
+    this.btnCloseSeaSelect = document.getElementById('btn-close-sea-select');
+    this.dataSourceLabel = document.getElementById('data-source-label');
+    this.statBatteryMax = document.getElementById('stat-battery-max');
+    this.statHandMax = document.getElementById('stat-hand-max');
 
     // Action Buttons
     this.btnAttack = document.getElementById('btn-action-attack');
@@ -128,12 +207,20 @@ export class GameUI {
       });
     }
 
-    // Restart Button
+    // Restart Button (same sea + scooter)
     this.btnRestart.addEventListener('click', () => {
       this.game.reset();
-      this.clearSelection();
       this.selectedTarget = null;
-      this.render();
+      this.clearSelection();
+    });
+
+    // Sea selection
+    this.btnNewAdventure?.addEventListener('click', () => this.openSeaSelect());
+    this.btnCurrentSea?.addEventListener('click', () => this.openSeaSelect());
+    this.btnCloseSeaSelect?.addEventListener('click', () => this.closeSeaSelect());
+    this.btnStartAdventure?.addEventListener('click', () => this.startAdventure());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !this.seaOverlay.classList.contains('hidden')) this.closeSeaSelect();
     });
 
     // Debug Controls
@@ -203,7 +290,15 @@ export class GameUI {
 
     const cardId = card.uid || card.id;
 
-    // If a card purchase is pending replacement at 7/7 capacity, clicking replaces it!
+    // Fish ability: choose cards to discard
+    if (this.game.pendingDiscard) {
+      this.game.discardFromHand(cardId);
+      this.selectedSequence = this.selectedSequence.filter(c => (c.uid || c.id) !== cardId);
+      this.render();
+      return;
+    }
+
+    // If a card purchase is pending replacement at capacity, clicking replaces it!
     if (this.game.pendingPurchase) {
       const repRes = this.game.replaceAndAcquire(cardId);
       if (repRes.success) {
@@ -236,7 +331,7 @@ export class GameUI {
       return;
     }
     if (this.game.status === 'post_game' && type !== 'stockpile') {
-      alert('Market purchases are closed after defeating the Great White Shark. Spend your remaining energy claiming stockpile treasures!');
+      alert('Market purchases are closed during the Victory Lap. Spend your remaining energy claiming stockpile treasures!');
       return;
     }
 
@@ -355,7 +450,16 @@ export class GameUI {
       this.monsterNameEl.textContent = isDefeated
         ? `${fish.name} (Defeated! 🏆)`
         : `Encounter ${g.currentMonsterIndex + 1}/${g.monstersList.length}: ${fish.name}`;
-      this.monsterTargetEl.textContent = fish.target;
+      if (fish.targets.length > 1) {
+        this.monsterTargetEl.innerHTML = fish.targets
+          .map(t => fish.remainingTargets.includes(t) ? `${t}` : `<s style="opacity:.45">${t}</s>`)
+          .join(' & ');
+      } else {
+        this.monsterTargetEl.textContent = fish.targets[0];
+      }
+      if (this.fishAbilityEl) {
+        this.fishAbilityEl.textContent = fish.abilityText ? `✨ ${fish.abilityText}` : '';
+      }
       if (this.batteryCountTextEl) {
         this.batteryCountTextEl.textContent = `${g.currentBolts} / ${g.maxBolts} Bolts`;
       }
@@ -365,10 +469,20 @@ export class GameUI {
 
       // Render vector graphic
       if (this.creatureArtEl) {
-        this.creatureArtEl.innerHTML = FISH_ART[fish.id] || '';
+        this.creatureArtEl.innerHTML = fishArtFor(fish);
       }
 
-      // Render 4 double-sided battery cards (v0.8)
+      // Upcoming encounters: face-down (targets hidden per v0.10 rules)
+      if (this.upcomingFishEl) {
+        this.upcomingFishEl.innerHTML = g.monstersList.map((f, i) => {
+          const cls = i < g.currentMonsterIndex || (i === g.currentMonsterIndex && isDefeated)
+            ? 'done' : (i === g.currentMonsterIndex ? 'current' : 'hidden-fish');
+          const label = i < g.currentMonsterIndex || i === g.currentMonsterIndex ? f.name : 'Face-down fish';
+          return `<span class="encounter-pip ${cls}" title="${label}">${i + 1}</span>`;
+        }).join('');
+      }
+
+      // Render double-sided battery cards (count set by scooter)
       if (this.batteryCardsRowEl) {
         let batteryCardsHtml = '';
         for (let i = 0; i < g.maxBolts; i++) {
@@ -386,9 +500,10 @@ export class GameUI {
     } else {
       this.monsterNameEl.textContent = 'All Sea Creatures Defeated!';
       this.monsterTargetEl.textContent = '-';
+      if (this.fishAbilityEl) this.fishAbilityEl.textContent = '';
       if (this.batteryCountTextEl) this.batteryCountTextEl.textContent = '-';
       if (this.batteryCardsRowEl) this.batteryCardsRowEl.innerHTML = '';
-      if (this.creatureArtEl) this.creatureArtEl.innerHTML = FISH_ART[5] || '';
+      if (this.creatureArtEl) this.creatureArtEl.innerHTML = '';
     }
 
     // Auto-select target if calculation matches and auto-calc is enabled
@@ -411,7 +526,7 @@ export class GameUI {
           </div>
         `;
       } else {
-        slotEl.className = `portrait-card market-card op-${card.op === '×' ? 'mult' : 'add'}`;
+        slotEl.className = `portrait-card market-card ${opClass(card)}`;
         if (isPostGame) {
           slotEl.classList.add('market-card-closed');
           slotEl.style.opacity = '0.45';
@@ -463,9 +578,11 @@ export class GameUI {
             matchBadge = `<div class="card-match-indicator">✨ MATCH! (Click to Claim)</div>`;
           }
 
+          slotEl.title = `${card.name} — ${card.desc}`;
           slotEl.innerHTML = `
             <div class="card-corner-top">💎 ${card.gems}</div>
             <div class="card-center-gems">${card.label}</div>
+            <div class="treasure-name">${card.name}</div>
             <div class="card-target-bottom">🎯 ${card.target}</div>
             ${matchBadge}
           `;
@@ -501,7 +618,7 @@ export class GameUI {
 
         const card = step.card;
         const cardEl = document.createElement('div');
-        cardEl.className = `portrait-card workbench-card op-${card.op === '×' ? 'mult' : 'add'}`;
+        cardEl.className = `portrait-card workbench-card ${opClass(card)}`;
         cardEl.title = 'Click to return this card to your hand';
         const stepBadge = this.showCalculator ? `<div class="card-calc-step">= ${step.result}</div>` : '';
         cardEl.innerHTML = `
@@ -541,7 +658,7 @@ export class GameUI {
       : null;
 
     if (this.showCalculator) {
-      if (fish && calc.total === fish.target && !isPostGame) {
+      if (fish && fish.remainingTargets.includes(calc.total) && !isPostGame) {
         const alertLabel = isFinalAttack ? '🚨 MATCHES FINAL ATTACK TARGET! Hit now to recharge!' : `🎯 Matches ${fish.name} Target! Ready to Attack!`;
         comparisonText += `<span class="badge-match monster">${alertLabel}</span> `;
       }
@@ -563,10 +680,15 @@ export class GameUI {
     // 5. Hand Display: Number cards are reusable!
     this.handNumberCardsEl.innerHTML = '';
     const isReplacing = !!g.pendingPurchase;
+    const isDiscarding = !!g.pendingDiscard;
+    const isBlocked = isReplacing || isDiscarding;
 
     if (this.handReplacementAlert) {
       if (isReplacing) {
         this.handReplacementAlert.classList.remove('hidden');
+        if (this.replacementTitle) {
+          this.replacementTitle.textContent = `🔄 SCOOTER AT CAPACITY (${g.hand.length}/${g.maxHandCapacity})!`;
+        }
         if (this.replacementPromptText) {
           this.replacementPromptText.textContent = `Click any card below to permanently replace it with ${g.pendingPurchase.card.label} (🎯 ${g.pendingPurchase.card.target}).`;
         }
@@ -575,9 +697,18 @@ export class GameUI {
       }
     }
 
+    if (this.handDiscardAlert) {
+      this.handDiscardAlert.classList.toggle('hidden', !isDiscarding);
+      if (isDiscarding) {
+        const n = g.pendingDiscard.remaining;
+        this.discardTitle.textContent = `🐙 ${g.pendingDiscard.source.toUpperCase()} ATTACKS!`;
+        this.discardPromptText.textContent = `Click ${n} card${n > 1 ? 's' : ''} below to permanently discard ${n > 1 ? 'them' : 'it'}.`;
+      }
+    }
+
     const selectedIds = new Set(this.selectedSequence.map(c => c.uid || c.id));
-    const cardsInHand = isReplacing
-      ? g.hand // When replacing, show all cards in hand
+    const cardsInHand = isBlocked
+      ? g.hand // When replacing/discarding, show all cards in hand
       : g.hand.filter(c => !selectedIds.has(c.uid || c.id));
 
     if (cardsInHand.length === 0) {
@@ -585,15 +716,18 @@ export class GameUI {
     } else {
       cardsInHand.forEach(c => {
         const cardEl = document.createElement('div');
-        cardEl.className = `portrait-card game-card number-card op-${c.op === '×' ? 'mult' : 'add'}`;
-        if (isReplacing) {
+        cardEl.className = `portrait-card game-card number-card ${opClass(c)}`;
+        if (isDiscarding) {
+          cardEl.classList.add('selectable-for-replacement');
+          cardEl.title = `Click to PERMANENTLY DISCARD ${c.label}`;
+        } else if (isReplacing) {
           cardEl.classList.add('selectable-for-replacement');
           cardEl.title = `Click to PERMANENTLY REMOVE ${c.label} and add ${g.pendingPurchase.card.label}`;
         } else {
           cardEl.title = 'Click to place this card onto the Calculation Workbench';
         }
 
-        const replaceTag = isReplacing ? `<div class="card-match-indicator" style="background:#d97706;">SCRAP</div>` : '';
+        const replaceTag = isBlocked ? `<div class="card-match-indicator" style="background:#d97706;">${isDiscarding ? 'DISCARD' : 'SCRAP'}</div>` : '';
 
         cardEl.innerHTML = `
           <div class="card-corner-top">${c.label}</div>
@@ -607,7 +741,7 @@ export class GameUI {
     }
 
     // 6. Actions Panel & Button States
-    const matchesFish = (fish && calc.total === fish.target && !isPostGame);
+    const matchesFish = (fish && fish.remainingTargets.includes(calc.total) && !isPostGame);
     const targetCard = selectedTargetCard;
     const matchesTarget = (targetCard && calc.total === targetCard.target);
 
@@ -619,7 +753,7 @@ export class GameUI {
       this.btnAttack.disabled = true;
       this.btnAttack.classList.remove('final-attack-mode', 'ready-to-act');
       this.btnAttack.querySelector('.btn-title').textContent = '⚔️ All Fish Defeated!';
-      this.btnAttack.querySelector('.btn-sub').textContent = 'Shark conquered!';
+      this.btnAttack.querySelector('.btn-sub').textContent = `${fish?.name || 'Final fish'} conquered!`;
 
       this.btnBuy.classList.remove('locked-action');
       if (targetCard && this.selectedTarget) {
@@ -635,8 +769,8 @@ export class GameUI {
         this.btnBuy.querySelector('.btn-title').textContent = '💎 Claim Treasure';
         this.btnBuy.querySelector('.btn-sub').textContent = `Spend remaining bolts (${g.currentBolts} ⚡) on stockpile treasures`;
       }
-      this.btnBuy.disabled = g.currentBolts <= 0 || isReplacing;
-      this.btnBuy.classList.toggle('ready-to-act', !!showMatchTarget && g.currentBolts > 0 && !isReplacing);
+      this.btnBuy.disabled = g.currentBolts <= 0 || isBlocked;
+      this.btnBuy.classList.toggle('ready-to-act', !!showMatchTarget && g.currentBolts > 0 && !isBlocked);
 
       this.btnRefresh.disabled = true;
       this.btnRefresh.classList.add('locked-action');
@@ -644,11 +778,11 @@ export class GameUI {
       this.btnRefresh.querySelector('.btn-sub').textContent = 'Encounters complete';
     } else if (isFinalAttack) {
       // FINAL ATTACK MODE: Only Attack is available!
-      this.btnAttack.disabled = false;
+      this.btnAttack.disabled = isBlocked;
       this.btnAttack.classList.add('final-attack-mode');
       this.btnAttack.classList.toggle('ready-to-act', showMatchMonster);
       this.btnAttack.querySelector('.btn-title').textContent = showMatchMonster ? '⚔️ FINAL ATTACK (🎯 Matched!)' : '⚔️ FINAL ATTACK';
-      this.btnAttack.querySelector('.btn-sub').textContent = showMatchMonster ? 'Defeat sea creature & recharge battery!' : `Hit ${fish?.name} 🎯 ${fish?.target} or strand!`;
+      this.btnAttack.querySelector('.btn-sub').textContent = showMatchMonster ? 'Defeat sea creature & recharge battery!' : `Hit ${fish?.name} 🎯 ${fish?.remainingTargets.join(' or ')} or strand!`;
 
       this.btnBuy.disabled = true;
       this.btnBuy.classList.add('locked-action');
@@ -663,9 +797,9 @@ export class GameUI {
     } else {
       // NORMAL COMBAT MODE
       this.btnAttack.classList.remove('final-attack-mode');
-      this.btnAttack.classList.toggle('ready-to-act', showMatchMonster && !isReplacing);
+      this.btnAttack.classList.toggle('ready-to-act', showMatchMonster && !isBlocked);
       this.btnAttack.querySelector('.btn-title').textContent = showMatchMonster ? '⚔️ Attack (🎯 Matched!)' : '⚔️ Attack';
-      this.btnAttack.querySelector('.btn-sub').textContent = showMatchMonster ? 'Defeat creature & recharge!' : `Hit ${fish?.name} 🎯 ${fish?.target} (Costs 1 ⚡)`;
+      this.btnAttack.querySelector('.btn-sub').textContent = showMatchMonster ? 'Defeat creature & recharge!' : `Hit ${fish?.name} 🎯 ${fish?.remainingTargets.join(' or ')} (Costs 1 ⚡)`;
 
       this.btnBuy.classList.remove('locked-action');
       if (targetCard && this.selectedTarget) {
@@ -688,23 +822,35 @@ export class GameUI {
         this.btnBuy.querySelector('.btn-title').textContent = '🛒 Buy / Claim';
         this.btnBuy.querySelector('.btn-sub').textContent = 'Match a Market card or Treasure target (Costs 1 ⚡)';
       }
-      this.btnBuy.classList.toggle('ready-to-act', !!showMatchTarget && !isReplacing);
+      this.btnBuy.classList.toggle('ready-to-act', !!showMatchTarget && !isBlocked);
 
       this.btnRefresh.classList.remove('locked-action');
       this.btnRefresh.querySelector('.btn-title').textContent = '🔄 Market Refresh';
       this.btnRefresh.querySelector('.btn-sub').textContent = 'Discard market & deal 5 new cards (Costs 1 ⚡)';
 
-      this.btnAttack.disabled = g.status !== 'in_progress' || isReplacing;
-      this.btnBuy.disabled = g.status !== 'in_progress' || isReplacing;
-      this.btnRefresh.disabled = g.status !== 'in_progress' || isReplacing;
+      this.btnAttack.disabled = g.status !== 'in_progress' || isBlocked;
+      this.btnBuy.disabled = g.status !== 'in_progress' || isBlocked;
+      this.btnRefresh.disabled = g.status !== 'in_progress' || isBlocked;
     }
 
     // 7. Stats Bar
     this.statDrawCount.textContent = g.drawPile.length;
     this.statDiscardCount.textContent = g.drawDiscard.length;
     this.statHandCount.textContent = g.hand.length;
+    if (this.statHandMax) this.statHandMax.textContent = g.maxHandCapacity;
+    if (this.statBatteryMax) this.statBatteryMax.textContent = g.maxBolts;
     if (this.statGemCount) this.statGemCount.textContent = g.totalGems;
     if (this.statStashCount) this.statStashCount.textContent = GameState.getPermanentGems();
+    if (this.btnCurrentSea) {
+      this.btnCurrentSea.textContent = `🌊 Sea ${g.sea.letter}: ${g.sea.name} • 🛵 ${g.scooter.name}`;
+    }
+    if (this.batteryHelpEl) {
+      this.batteryHelpEl.textContent = `${g.scooter.name}: ${g.maxBolts} bolts, hand capacity ${g.maxHandCapacity}. ` +
+        `Each action costs 1 bolt. Defeating a creature refills the battery (unless its ability says otherwise).` +
+        (g.scooter.abilityText ? ` Scooter ability: ${g.scooter.abilityText}.` : '');
+    }
+
+    this.renderQuests();
 
     if (this.btnEndRun) {
       this.btnEndRun.disabled = (g.status === 'won' || g.status === 'lost');
@@ -725,7 +871,7 @@ export class GameUI {
         g.treasureChest.forEach(t => {
           const itemEl = document.createElement('div');
           itemEl.className = 'treasure-chest-item';
-          itemEl.title = `${t.category} target (${t.target})`;
+          itemEl.title = `${t.name} (🎯 ${t.target})`;
           itemEl.innerHTML = `
             <div class="t-corner">💎 ${t.gems}</div>
             <div class="t-gems">${t.label}</div>
@@ -747,7 +893,7 @@ export class GameUI {
     if (isPostGame) {
       this.gameBannerEl.className = 'status-banner victory';
       this.gameBannerEl.innerHTML = `
-        <div>🏆 <strong>GREAT WHITE SHARK DEFEATED!</strong> Scooter battery refilled (<strong>${g.currentBolts}/${g.maxBolts} ⚡</strong>).</div>
+        <div>🏆 <strong>${(fish?.name || 'FINAL FISH').toUpperCase()} DEFEATED — SEA ${g.sea.letter} COMPLETE!</strong> Victory Lap battery: <strong>${g.currentBolts}/${g.maxBolts} ⚡</strong>.</div>
         <div class="victory-bonus-box">Spend your remaining energy claiming any remaining treasures in the stockpile, or conclude your adventure to bank your gems!</div>
         <div style="display: flex; gap: 8px; margin-top: 6px;">
           <button id="btn-banner-end-run" class="btn-primary">⚓ Conclude Adventure & Bank Haul</button>
@@ -760,11 +906,15 @@ export class GameUI {
     } else if (g.status === 'won') {
       this.gameBannerEl.className = 'status-banner victory';
       this.gameBannerEl.innerHTML = `
-        <div>🏆 <strong>ADVENTURE COMPLETED!</strong> You conquered the underwater world!</div>
-        <div class="victory-stats">Adventure Score: <strong>💎 ${g.totalGems} Gems</strong> (${g.treasureChest.length} treasures) • Total Legacy Stash: <strong>💎 ${GameState.getPermanentGems()} Gems</strong></div>
-        <button id="btn-banner-restart" class="btn-primary" style="margin-top: 8px;">Ride Again</button>
+        <div>🏆 <strong>ADVENTURE COMPLETED!</strong> Sea ${g.sea.letter}: ${g.sea.name}</div>
+        <div class="victory-stats">Adventure Score: <strong>💎 ${g.totalGems} Gems</strong> (${g.treasureChest.length} treasures, ${g.quests.quests.filter(q => q.completed).length}/${g.quests.quests.length} quests) • Total Legacy Stash: <strong>💎 ${GameState.getPermanentGems()} Gems</strong></div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button id="btn-banner-restart" class="btn-primary">Ride Again</button>
+          <button id="btn-banner-new" class="btn-secondary">🧭 Choose Another Sea</button>
+        </div>
       `;
       document.getElementById('btn-banner-restart')?.addEventListener('click', () => this.btnRestart.click());
+      document.getElementById('btn-banner-new')?.addEventListener('click', () => this.openSeaSelect());
     } else if (g.status === 'lost') {
       this.gameBannerEl.className = 'status-banner gameover';
       this.gameBannerEl.innerHTML = `
@@ -785,6 +935,105 @@ export class GameUI {
         <span class="log-msg">${item.msg}</span>
       </div>
     `).join('');
+  }
+
+  renderQuests() {
+    const g = this.game;
+    if (!this.questListEl) return;
+    if (this.questPanelTitleEl) this.questPanelTitleEl.textContent = `SEA ${g.sea.letter} QUESTS`;
+    if (this.questGemsEl) this.questGemsEl.textContent = `${g.questGems} 💎`;
+    this.questListEl.innerHTML = g.quests.quests.map(q => {
+      const reward = q.gemsTbd ? '💎 TBD' : `💎 ${q.gems}`;
+      const tracking = q.rule ? '' : ' <span class="quest-manual" title="Not auto-tracked">(manual)</span>';
+      return `<li class="quest-item ${q.completed ? 'done' : ''}">
+        <span class="quest-check">${q.completed ? '✅' : '⬜'}</span>
+        <span class="quest-text">${q.text}${tracking}</span>
+        <span class="quest-reward">${reward}</span>
+      </li>`;
+    }).join('') || '<li class="quest-item">No quests for this sea.</li>';
+  }
+
+  // --- Sea & Scooter selection -------------------------------------------
+
+  openSeaSelect() {
+    this.draft = { ...this.selection };
+    this.renderSeaSelect();
+    this.seaOverlay.classList.remove('hidden');
+  }
+
+  closeSeaSelect() {
+    this.seaOverlay.classList.add('hidden');
+  }
+
+  startAdventure() {
+    this.selection = { ...this.draft };
+    this.saveSelection();
+    this.game = new GameState({ sea: this.selection.sea, scooterId: this.selection.scooterId });
+    this.selectedTarget = null;
+    this.selectedSequence = [];
+    this.closeSeaSelect();
+    this.render();
+  }
+
+  renderSeaSelect() {
+    const d = this.draft;
+
+    this.seaOptionsEl.innerHTML = GAME_DATA.seas.map(s => `
+      <button class="sea-option ${s.letter === d.sea ? 'active' : ''}" data-sea="${s.letter}" id="sea-option-${s.letter}">
+        <span class="sea-letter">${s.letter}</span>
+        <span class="sea-name">${s.name}</span>
+        <span class="sea-focus">${s.mathsFocus}</span>
+      </button>`).join('');
+    this.seaOptionsEl.querySelectorAll('.sea-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        d.sea = btn.dataset.sea;
+        const scooters = scootersForSea(d.sea);
+        if (!scooters.some(s => s.id === d.scooterId)) d.scooterId = defaultScooterForSea(d.sea)?.id;
+        this.renderSeaSelect();
+      });
+    });
+
+    const scooters = scootersForSea(d.sea);
+    this.scooterOptionsEl.innerHTML = scooters.map(s => `
+      <button class="scooter-option ${s.id === d.scooterId ? 'active' : ''}" data-id="${s.id}" id="scooter-option-${s.id}">
+        <span class="scooter-head"><span class="sea-badge">${s.sea}</span> ${s.name}</span>
+        <span class="scooter-stats">⚡ ${s.battery} • ✋ ${s.handCapacity} cards</span>
+        <span class="scooter-hand">${s.startingHand.map(c => `<span class="mini-op ${opClass(c)}">${c.label}</span>`).join('')}</span>
+        ${s.abilityText ? `<span class="scooter-ability">✨ ${s.abilityText}</span>` : ''}
+      </button>`).join('');
+    this.scooterOptionsEl.querySelectorAll('.scooter-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        d.scooterId = btn.dataset.id;
+        this.renderSeaSelect();
+      });
+    });
+
+    // Preview of what this sea contains
+    const sea = getSea(d.sea);
+    const deck = buildDrawPile(d.sea);
+    const ops = [...new Set(deck.map(c => c.label))];
+    const treasures = buildTreasureDeck(d.sea);
+    const newFish = GAME_DATA.fish.filter(f => f.sea === d.sea);
+    const fishPool = GAME_DATA.fish.filter(f => isUnlocked(f.sea, d.sea));
+    const quests = GAME_DATA.quests[d.sea] || [];
+
+    this.seaPreviewEl.innerHTML = `
+      <div class="preview-title">Sea ${sea.letter}: ${sea.name}</div>
+      <div class="preview-desc">${sea.description}</div>
+      <div class="preview-grid">
+        <div><strong>Encounters:</strong> ${sea.fishPerAdventure} fish ${sea.randomised ? '(randomised)' : '(fixed order)'}
+          ${sea.finalFishId ? ` • final: ${GAME_DATA.fish.find(f => f.id === sea.finalFishId)?.name}` : ''}</div>
+        <div><strong>New fish:</strong> ${newFish.map(f => f.name).join(', ') || '—'} <span class="muted">(pool of ${fishPool.length})</span></div>
+        <div><strong>Market (${deck.length} cards):</strong> ${ops.map(l => `<span class="mini-op ${l.startsWith('×') ? 'op-mult' : l.startsWith('−') ? 'op-sub' : 'op-add'}">${l}</span>`).join('')}</div>
+        <div><strong>Treasure deck:</strong> ${treasures.length} cards</div>
+        <div><strong>Quests:</strong> ${quests.map(q => q.text).join(' • ') || '—'}</div>
+      </div>
+      <div class="muted preview-rules">${sea.encounterRulesText}</div>
+    `;
+
+    if (this.dataSourceLabel) {
+      this.dataSourceLabel.textContent = `Data: ${GAME_DATA.source}`;
+    }
   }
 }
 

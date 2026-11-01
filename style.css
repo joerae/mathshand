@@ -1605,4 +1605,527 @@ body {
   text-transform: capitalize;
 }
 
+/* ==========================================================================
+   Seven Seas Architecture Styles (v0.10)
+   ========================================================================== */
+
+/* Universal hidden helper */
+.hidden {
+  display: none !important;
+}
+
+/* Top bar: Current Sea chip & New Adventure button */
+.sea-chip {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 1px solid #38bdf8;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.3);
+  transition: all 0.2s ease;
+}
+
+.sea-chip:hover {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #ffffff !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25);
+}
+
+.btn-accent:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.4);
+  transform: translateY(-1px);
+}
+
+/* --- Sea & Scooter Selection Modal --- */
+.sea-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.sea-overlay.hidden {
+  display: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sea-modal {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  max-width: 860px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #1e293b;
+}
+
+.sea-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1.5px solid #e2e8f0;
+  padding-bottom: 12px;
+  position: relative;
+}
+
+.sea-modal-header h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sea-modal-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 3px;
+  display: block;
+}
+
+.sea-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.sea-close:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.sea-step {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #0369a1;
+  margin: 4px 0 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Sea options grid (7 seas: A to G) */
+.sea-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  gap: 8px;
+}
+
+.sea-option {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.sea-option:hover {
+  background: #f0f9ff;
+  border-color: #7dd3fc;
+  transform: translateY(-2px);
+}
+
+.sea-option.active {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.35);
+}
+
+.sea-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.sea-option.active .sea-letter {
+  background: #0369a1;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.4);
+}
+
+.sea-name {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.sea-focus {
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+/* Scooter options grid */
+.scooter-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.scooter-option {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.scooter-option:hover {
+  background: #f0fdf4;
+  border-color: #86efac;
+  transform: translateY(-2px);
+}
+
+.scooter-option.active {
+  background: #ecfdf5;
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+}
+
+.scooter-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.sea-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.scooter-stats {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.scooter-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.scooter-ability {
+  font-size: 0.72rem;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Sea preview card */
+.sea-preview {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #0369a1;
+}
+
+.preview-desc {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.preview-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.preview-rules {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: #64748b;
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+.sea-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1.5px solid #e2e8f0;
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.data-source {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.btn-start {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-start:hover {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.45);
+  transform: translateY(-2px);
+}
+
+/* --- Mini Op Badges --- */
+.mini-op {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+.mini-op.op-add {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.mini-op.op-sub {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.mini-op.op-mult {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+/* --- Fish card additions: ability & upcoming encounters --- */
+.fish-ability {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 3px 8px;
+  border-radius: 6px;
+  max-width: 65%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.upcoming-fish {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.encounter-pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 800;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.encounter-pip.done {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.encounter-pip.current {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 0 0 2.5px #38bdf8;
+  transform: scale(1.1);
+}
+
+.encounter-pip.hidden-fish {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1.5px dashed #cbd5e1;
+}
+
+/* Discard alert banner (fish ability) */
+.discard-banner {
+  background: #fee2e2 !important;
+  border-color: #ef4444 !important;
+  color: #991b1b !important;
+}
+
+/* --- Repeatable Quests Panel --- */
+.quest-panel {
+  border-top: 4px solid #f59e0b;
+}
+
+.quest-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.quest-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.quest-item.done {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+.quest-item .quest-check {
+  font-size: 1rem;
+}
+
+.quest-item .quest-text {
+  flex: 1;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.quest-item.done .quest-text {
+  color: #065f46;
+  text-decoration: line-through;
+}
+
+.quest-item .quest-reward {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.quest-item.done .quest-reward {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #047857;
+}
+
+.quest-manual {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-style: italic;
+  font-weight: normal;
+}
+
+/* Treasure card name inside stockpile */
+.portrait-card.treasure-card .treasure-name {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #92400e;
+  margin: 2px 0;
+  text-align: center;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 

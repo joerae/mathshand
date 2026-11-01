@@ -5,9 +5,15 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
+    "import-data": "node scripts/import_xlsx.mjs",
+    "prestart": "node scripts/import_xlsx.mjs",
     "start": "node server.js",
+    "pretest": "node scripts/import_xlsx.mjs",
     "test": "node test/test_game.js"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "xlsx": "^0.18.5"
+  }
 }

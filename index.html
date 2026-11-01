@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maths Handbuilder - Underwater Scooter Adventure (v0.7)</title>
+  <title>Maths Handbuilder - Seven Seas Scooter Adventure (v0.10)</title>
+  <meta name="description" content="Maths Handbuilder: a roguelike handbuilding card game prototype where maths powers your underwater scooter adventure across seven seas.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,29 +13,51 @@
     <header class="top-bar">
       <div class="title-group">
         <h1>Maths Handbuilder</h1>
-        <span class="version-tag">Rules v0.8</span>
+        <span class="version-tag">Rules v0.10</span>
+        <button id="btn-current-sea" class="sea-chip" title="Choose a different sea or scooter">🌊 Sea A</button>
       </div>
 
       <div class="deck-stats">
-        <div class="stat-pill battery-pill" title="Scooter battery charge (4 double-sided cards)">
-          Battery: <strong>⚡ <span id="stat-battery-count">4</span>/4</strong>
+        <div class="stat-pill battery-pill" title="Scooter battery charge">
+          Battery: <strong>⚡ <span id="stat-battery-count">4</span>/<span id="stat-battery-max">4</span></strong>
         </div>
-        <div class="stat-pill" title="Cards remaining in the 54-card number deck">
+        <div class="stat-pill" title="Cards remaining in the number card draw pile">
           Draw Pile: <strong id="stat-draw-count">0</strong>
         </div>
         <div class="stat-pill" title="Reshuffle pile (refreshed market cards)">
           Deck Discard: <strong id="stat-discard-count">0</strong>
         </div>
-        <div class="stat-pill" title="Number cards currently in your hand (max 7)">
-          Hand: <strong><span id="stat-hand-count">0</span>/7</strong>
+        <div class="stat-pill" title="Number cards currently in your hand (scooter capacity)">
+          Hand: <strong><span id="stat-hand-count">0</span>/<span id="stat-hand-max">7</span></strong>
         </div>
         <div class="stat-pill treasure-pill" title="Gems in current adventure and permanent legacy stash">
           Run: <strong>💎 <span id="stat-gem-count">0</span></strong> | Stash: <strong>💎 <span id="stat-stash-count">0</span></strong>
         </div>
         <button id="btn-end-run" class="btn-secondary" title="End adventure and bank all collected gems">⚓ End Run</button>
-        <button id="btn-restart" class="btn-secondary" title="Reset adventure to starting state">🔄 Restart</button>
+        <button id="btn-restart" class="btn-secondary" title="Restart the same sea with the same scooter">🔄 Restart</button>
+        <button id="btn-new-adventure" class="btn-secondary btn-accent" title="Choose a sea and scooter">🧭 New Adventure</button>
       </div>
     </header>
+
+    <!-- Sea & Scooter Selection -->
+    <div id="sea-select-overlay" class="sea-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="sea-select-title">
+      <div class="sea-modal">
+        <div class="sea-modal-header">
+          <h2 id="sea-select-title">Choose your adventure</h2>
+          <span class="sea-modal-sub">Playing a sea unlocks every card marked from A up to that sea.</span>
+          <button id="btn-close-sea-select" class="btn-text sea-close" title="Close">✕</button>
+        </div>
+        <h3 class="sea-step">1. Sea</h3>
+        <div id="sea-options" class="sea-options"></div>
+        <h3 class="sea-step">2. Scooter</h3>
+        <div id="scooter-options" class="scooter-options"></div>
+        <div id="sea-preview" class="sea-preview"></div>
+        <div class="sea-modal-footer">
+          <span id="data-source-label" class="data-source"></span>
+          <button id="btn-start-adventure" class="btn-primary btn-start">🛵 Start Adventure</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Game Status Banner (Victory / Defeat / Post-Shark) -->
     <div id="game-status-banner" class="status-banner hidden"></div>
@@ -67,6 +90,7 @@
               <!-- SVG graphic injected dynamically -->
             </div>
             <div class="fish-card-footer">
+              <span id="fish-ability" class="fish-ability"></span>
               <div class="fish-card-target-box">
                 <span class="badge-sub">TARGET</span>
                 <span id="monster-target" class="badge-num">10</span>
@@ -81,7 +105,8 @@
               <span id="battery-count-text" class="battery-count">4 / 4 Bolts</span>
             </div>
             <div id="battery-cards-row" class="battery-cards-row"></div>
-            <div class="battery-help">Four double-sided bolt cards (portrait). Costs 1 bolt per action. Defeating any creature fully refills the battery to 4 bolts!</div>
+            <div id="battery-help" class="battery-help">Costs 1 bolt per action. Defeating a creature fully refills the battery.</div>
+            <div id="upcoming-fish" class="upcoming-fish"></div>
           </div>
         </div>
 
@@ -92,10 +117,18 @@
             <span class="panel-hint">Cards are reusable • Click to chain onto Calculation Workbench</span>
           </div>
 
-          <!-- Card Replacement Prompt Banner when Buying at 7/7 Capacity -->
+          <!-- Fish ability: discard cards -->
+          <div id="hand-discard-alert" class="replacement-banner discard-banner hidden">
+            <div>
+              <strong id="discard-title">🐙 DISCARD!</strong>
+              <div id="discard-prompt-text" style="font-size: 0.8rem; margin-top: 2px;">Click cards to permanently discard them.</div>
+            </div>
+          </div>
+
+          <!-- Card Replacement Prompt Banner when Buying at capacity -->
           <div id="hand-replacement-alert" class="replacement-banner hidden">
             <div>
-              <strong>🔄 SCOOTER AT CAPACITY (7/7)!</strong>
+              <strong id="replacement-title">🔄 SCOOTER AT CAPACITY!</strong>
               <div id="replacement-prompt-text" style="font-size: 0.8rem; margin-top: 2px;">Click a card in your hand to permanently replace it.</div>
             </div>
             <button id="btn-cancel-replacement" class="btn-sm" style="background: #ffffff; border: 1px solid #d97706; color: #92400e;">Cancel</button>
@@ -130,7 +163,16 @@
           </div>
         </div>
 
-        <!-- 4. Treasure Chest (Gems Collected) -->
+        <!-- 4. Sea Quests -->
+        <div class="panel quest-panel">
+          <div class="panel-header">
+            <span class="panel-tag" id="quest-panel-title">SEA QUESTS</span>
+            <span class="panel-hint">Once per adventure • Quest gems: <strong id="quest-gems">0 💎</strong></span>
+          </div>
+          <ul id="quest-list" class="quest-list"></ul>
+        </div>
+
+        <!-- 5. Treasure Chest (Gems Collected) -->
         <div class="panel treasure-panel">
           <div class="panel-header">
             <span class="panel-tag">TREASURE CHEST</span>
