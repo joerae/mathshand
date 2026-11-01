@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Maths_Handbuilder_Card_Content_v6(1).xlsx",
-  "importedAt": "2026-11-01T23:22:37.866Z",
+  "importedAt": "2026-11-01T23:27:58.762Z",
   "seaOrder": [
     "A",
     "B",
@@ -327,7 +327,7 @@ export const GAME_DATA = {
       "id": "F_Scooter",
       "sea": "F",
       "name": "Seven Speed Scooter",
-      "battery": 3,
+      "battery": 4,
       "handCapacity": 8,
       "startingHand": [
         {
@@ -367,7 +367,7 @@ export const GAME_DATA = {
       "id": "G_Scooter",
       "sea": "G",
       "name": "Treasure Hunter",
-      "battery": 3,
+      "battery": 4,
       "handCapacity": 7,
       "startingHand": [
         {
