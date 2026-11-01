@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Maths_Handbuilder_Card_Content_v6(1).xlsx",
-  "importedAt": "2026-11-01T22:38:17.527Z",
+  "importedAt": "2026-11-01T23:22:37.866Z",
   "seaOrder": [
     "A",
     "B",
@@ -28,10 +28,17 @@ export const GAME_DATA = {
       "name": "Shallow Reef",
       "description": "Getting Used to the Game. Number Bonds",
       "mathsFocus": "Addition +1 to +9",
-      "encounterRulesText": "Fixed 4 encounters: Chainsaw Clownfish, Electric Eel, Pufferfish, Kraken Takin’ a Break’n",
+      "encounterRulesText": "Fixed 4 encounters: Sea A cards 1-4 in order",
       "fishPerAdventure": 4,
       "randomised": false,
+      "startFishId": null,
       "finalFishId": null,
+      "fixedFishIds": [
+        "A_Fish",
+        "A_Fish_2",
+        "A_Fish_3",
+        "A_Fish_4"
+      ],
       "newNumberCardsText": "+1,+2,+3,+4,+5,+6,+7,+8,+9"
     },
     {
@@ -40,10 +47,12 @@ export const GAME_DATA = {
       "name": "Extended Addition",
       "description": "Unlocking new cards, hitting new targets. Number bonds for 10,20,30",
       "mathsFocus": "+10, +12, +20; bonds across 10/20/30",
-      "encounterRulesText": "Fixed or curated encounter order; TBD",
+      "encounterRulesText": "Start with Clownfish with a Chainsaw. Rest are random",
       "fishPerAdventure": 5,
-      "randomised": false,
+      "randomised": true,
+      "startFishId": "A_Fish",
       "finalFishId": null,
+      "fixedFishIds": null,
       "newNumberCardsText": "+10,+12,+20,"
     },
     {
@@ -52,10 +61,12 @@ export const GAME_DATA = {
       "name": "Negative Depths",
       "description": "Getting used to hitting negative numbers",
       "mathsFocus": "−1 to −5, −10; negative targets",
-      "encounterRulesText": "Randomised middle-fish selection introduced; fixed encounters as specified on Sea card",
+      "encounterRulesText": "Start with Moray Eel. Randomised Centre. Finish with Anglerfish",
       "fishPerAdventure": 5,
       "randomised": true,
-      "finalFishId": null,
+      "startFishId": "C_Fish",
+      "finalFishId": "C_Fish_2",
+      "fixedFishIds": null,
       "newNumberCardsText": "-1,-2,-3,-4,-5,-10"
     },
     {
@@ -67,7 +78,9 @@ export const GAME_DATA = {
       "encounterRulesText": "Sea-specific encounter selection; randomisation available since Sea C",
       "fishPerAdventure": 5,
       "randomised": true,
+      "startFishId": null,
       "finalFishId": null,
+      "fixedFishIds": null,
       "newNumberCardsText": "x2, x10"
     },
     {
@@ -79,7 +92,9 @@ export const GAME_DATA = {
       "encounterRulesText": "Random pool or sea-specific fish roster",
       "fishPerAdventure": 5,
       "randomised": true,
+      "startFishId": null,
       "finalFishId": null,
+      "fixedFishIds": null,
       "newNumberCardsText": "x3,x4,x5"
     },
     {
@@ -91,7 +106,9 @@ export const GAME_DATA = {
       "encounterRulesText": "Random/curated as needed",
       "fishPerAdventure": 5,
       "randomised": true,
+      "startFishId": null,
       "finalFishId": null,
+      "fixedFishIds": null,
       "newNumberCardsText": "-6,-7,-8,-9, x-2(?)"
     },
     {
@@ -103,7 +120,9 @@ export const GAME_DATA = {
       "encounterRulesText": "Great White Shark is the fixed final encounter; earlier fish selected from Sea G eligible pool (details TBD)",
       "fishPerAdventure": 5,
       "randomised": true,
+      "startFishId": null,
       "finalFishId": "G_Fish",
+      "fixedFishIds": null,
       "newNumberCardsText": "x6,x7,x8,x9"
     }
   ],
@@ -340,7 +359,7 @@ export const GAME_DATA = {
       "abilities": {
         "revealTreasuresAtStart": 1
       },
-      "concept": "Negative multiplication alternative",
+      "concept": "Larger Multiplicaiton",
       "status": "Proposed",
       "notes": "Negative multiplier is speculative; could instead use minus-card focus."
     },
@@ -349,7 +368,7 @@ export const GAME_DATA = {
       "sea": "G",
       "name": "Treasure Hunter",
       "battery": 3,
-      "handCapacity": 6,
+      "handCapacity": 7,
       "startingHand": [
         {
           "op": "+",
@@ -663,8 +682,8 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "F_Num_1",
-      "sea": "F",
+      "id": "G_Num_1",
+      "sea": "G",
       "op": "-",
       "value": 6,
       "label": "−6",
@@ -675,8 +694,8 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "F_Num_2",
-      "sea": "F",
+      "id": "G_Num_2",
+      "sea": "G",
       "op": "-",
       "value": 7,
       "label": "−7",
@@ -687,8 +706,8 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "F_Num_3",
-      "sea": "F",
+      "id": "G_Num_3",
+      "sea": "G",
       "op": "-",
       "value": 8,
       "label": "−8",
@@ -699,8 +718,8 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "F_Num_4",
-      "sea": "F",
+      "id": "G_Num_4",
+      "sea": "G",
       "op": "-",
       "value": 9,
       "label": "−9",
@@ -711,20 +730,8 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "F_Num_5",
+      "id": "F_Num_1",
       "sea": "F",
-      "op": "×",
-      "value": -2,
-      "label": "×−2",
-      "target": 2,
-      "copies": 3,
-      "mathsType": "Negative multiplication (optional)",
-      "status": "Idea",
-      "enabled": false
-    },
-    {
-      "id": "G_Num_1",
-      "sea": "G",
       "op": "×",
       "value": 6,
       "label": "×6",
@@ -735,8 +742,8 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "G_Num_2",
-      "sea": "G",
+      "id": "F_Num_2",
+      "sea": "F",
       "op": "×",
       "value": 7,
       "label": "×7",
@@ -747,8 +754,8 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "G_Num_3",
-      "sea": "G",
+      "id": "F_Num_3",
+      "sea": "F",
       "op": "×",
       "value": 8,
       "label": "×8",
@@ -759,8 +766,8 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "G_Num_4",
-      "sea": "G",
+      "id": "F_Num_4",
+      "sea": "F",
       "op": "×",
       "value": 9,
       "label": "×9",
@@ -841,7 +848,7 @@ export const GAME_DATA = {
     {
       "id": "C_Fish",
       "sea": "C",
-      "name": "Anglerfish",
+      "name": "Moray Eel",
       "copies": 1,
       "target": -8,
       "abilityText": "",
@@ -852,7 +859,7 @@ export const GAME_DATA = {
     {
       "id": "C_Fish_2",
       "sea": "C",
-      "name": "Moray Eel",
+      "name": "Anglerfish",
       "copies": 1,
       "target": -9,
       "abilityText": "",
@@ -996,7 +1003,7 @@ export const GAME_DATA = {
       "sea": "A",
       "name": "Tidal Trinket",
       "copies": 1,
-      "target": 20,
+      "target": 18,
       "gems": 1,
       "specialRule": "",
       "status": "Provisional"
@@ -1126,31 +1133,23 @@ export const GAME_DATA = {
     "A": [
       {
         "id": "A_Quest_1",
-        "text": "Defeat the first fish",
-        "gems": 0,
-        "gemsTbd": true,
+        "text": "Defeat Swordfish with a Sword",
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
-          "type": "defeat_fish_count",
-          "count": 1
+          "type": "defeat_specific_fish",
+          "fishId": "A_Fish_4",
+          "fishName": "Swordfish with a Sword"
         }
       },
       {
         "id": "A_Quest_2",
-        "text": "Buy a number card from the market",
-        "gems": 0,
-        "gemsTbd": true,
+        "text": "Get at least 2 treasure cards",
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
-          "type": "buy_market",
-          "count": 1
-        }
-      },
-      {
-        "id": "A_Quest_3",
-        "text": "Complete Sea A",
-        "gems": 0,
-        "gemsTbd": true,
-        "rule": {
-          "type": "complete_sea"
+          "type": "claim_treasure",
+          "count": 2
         }
       }
     ],
@@ -1158,8 +1157,8 @@ export const GAME_DATA = {
       {
         "id": "B_Quest_1",
         "text": "Make a target using +10",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "success_with_card",
           "action": "any",
@@ -1171,19 +1170,18 @@ export const GAME_DATA = {
       {
         "id": "B_Quest_2",
         "text": "Claim a treasure worth 2 gems",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "claim_treasure",
-          "gems": 2,
           "count": 1
         }
       },
       {
         "id": "B_Quest_3",
         "text": "Complete Sea B",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "complete_sea"
         }
@@ -1193,8 +1191,8 @@ export const GAME_DATA = {
       {
         "id": "C_Quest_1",
         "text": "Hit a negative fish target",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "defeat_negative_fish"
         }
@@ -1202,8 +1200,8 @@ export const GAME_DATA = {
       {
         "id": "C_Quest_2",
         "text": "Claim a negative-target treasure",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "claim_treasure",
           "negative": true,
@@ -1213,8 +1211,8 @@ export const GAME_DATA = {
       {
         "id": "C_Quest_3",
         "text": "Claim a negative-target treasure during this adventure",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "claim_treasure",
           "negative": true,
@@ -1226,8 +1224,8 @@ export const GAME_DATA = {
       {
         "id": "D_Quest_1",
         "text": "Win an encounter using ×2",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "success_with_card",
           "action": "attack",
@@ -1239,8 +1237,8 @@ export const GAME_DATA = {
       {
         "id": "D_Quest_2",
         "text": "Make a target using ×10",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "success_with_card",
           "action": "any",
@@ -1252,8 +1250,8 @@ export const GAME_DATA = {
       {
         "id": "D_Quest_3",
         "text": "Complete Sea D",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "complete_sea"
         }
@@ -1263,8 +1261,8 @@ export const GAME_DATA = {
       {
         "id": "E_Quest_1",
         "text": "Win using ×3, ×4 or ×5",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "success_with_card",
           "action": "attack",
@@ -1278,8 +1276,8 @@ export const GAME_DATA = {
       {
         "id": "E_Quest_2",
         "text": "Claim a tricky multiplication treasure",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "claim_treasure",
           "usingOp": "×",
@@ -1289,8 +1287,8 @@ export const GAME_DATA = {
       {
         "id": "E_Quest_3",
         "text": "Complete Sea E",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "complete_sea"
         }
@@ -1299,20 +1297,19 @@ export const GAME_DATA = {
     "F": [
       {
         "id": "F_Quest_1",
-        "text": "Win with a negative multiplier (if included)",
-        "gems": 0,
-        "gemsTbd": true,
+        "text": "Use 5 cards to defeat a fish",
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
-          "type": "success_with_card",
-          "action": "attack",
-          "negativeMultiplier": true
+          "type": "defeat_fish_with_cards_count",
+          "count": 5
         }
       },
       {
         "id": "F_Quest_2",
         "text": "Claim two negative treasures in a run",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "claim_treasure",
           "negative": true,
@@ -1322,8 +1319,8 @@ export const GAME_DATA = {
       {
         "id": "F_Quest_3",
         "text": "Complete Sea F",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "complete_sea"
         }
@@ -1333,8 +1330,8 @@ export const GAME_DATA = {
       {
         "id": "G_Quest_1",
         "text": "Use ×7 or ×8 successfully",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "success_with_card",
           "action": "any",
@@ -1347,8 +1344,8 @@ export const GAME_DATA = {
       {
         "id": "G_Quest_2",
         "text": "Claim a 3-gem treasure",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "claim_treasure",
           "gems": 3,
@@ -1358,8 +1355,8 @@ export const GAME_DATA = {
       {
         "id": "G_Quest_3",
         "text": "Complete Sea G",
-        "gems": 0,
-        "gemsTbd": true,
+        "gems": 1,
+        "gemsTbd": false,
         "rule": {
           "type": "complete_sea"
         }

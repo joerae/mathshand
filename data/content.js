@@ -137,19 +137,41 @@ export function buildEncounters(letter, rng = Math.random) {
   const sea = getSea(letter);
   if (!sea) throw new Error(`Unknown sea "${letter}"`);
 
+  // Fixed encounter sequence override (e.g. Sea A cards 1-4 in order)
+  if (sea.fixedFishIds && sea.fixedFishIds.length) {
+    const list = sea.fixedFishIds.map(id => GAME_DATA.fish.find(f => f.id === id)).filter(Boolean);
+    return list.map(makeEncounter);
+  }
+
+  const startFish = sea.startFishId ? GAME_DATA.fish.find(f => f.id === sea.startFishId) : null;
   const finalFish = sea.finalFishId ? GAME_DATA.fish.find(f => f.id === sea.finalFishId) : null;
-  const own = GAME_DATA.fish.filter(f => f.sea === sea.letter && f !== finalFish);
-  const earlier = GAME_DATA.fish.filter(f => seaIndex(f.sea) < seaIndex(sea.letter) && f !== finalFish);
+
+  const own = GAME_DATA.fish.filter(f => f.sea === sea.letter && f !== startFish && f !== finalFish);
+  const earlier = GAME_DATA.fish.filter(f => seaIndex(f.sea) < seaIndex(sea.letter) && f !== startFish && f !== finalFish);
 
   const slots = sea.fishPerAdventure;
-  const fillCount = Math.max(0, slots - own.length - (finalFish ? 1 : 0));
-  const filler = sea.randomised
-    ? shuffle(earlier, rng).slice(0, fillCount)
-    : earlier.slice(0, fillCount);
+  const fixedCount = (startFish ? 1 : 0) + (finalFish ? 1 : 0);
+  const neededMiddle = Math.max(0, slots - fixedCount);
 
-  let middle = [...filler, ...own];
-  if (sea.randomised) middle = shuffle(middle, rng);
+  let middle = [];
+  if (own.length >= neededMiddle) {
+    middle = sea.randomised ? shuffle(own, rng).slice(0, neededMiddle) : own.slice(0, neededMiddle);
+  } else {
+    const fillCount = neededMiddle - own.length;
+    const filler = sea.randomised
+      ? shuffle(earlier, rng).slice(0, fillCount)
+      : earlier.slice(0, fillCount);
+    middle = [...own, ...filler];
+    if (sea.randomised) {
+      middle = shuffle(middle, rng);
+    }
+  }
 
-  const ordered = finalFish ? [...middle, finalFish] : middle;
+  const ordered = [
+    ...(startFish ? [startFish] : []),
+    ...middle,
+    ...(finalFish ? [finalFish] : [])
+  ];
+
   return ordered.slice(0, Math.max(slots, ordered.length)).map(makeEncounter);
 }

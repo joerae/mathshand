@@ -75,7 +75,7 @@ function parseOperation(raw, context) {
   s = s.replace(/[\u2212\u2013\u2014]/g, '-'); // minus / dashes
   s = s.replace(/[xX*\u00D7]/g, '×');
   if (s.startsWith('=')) {
-    warn(`${context}: "${raw}" starts with "=", treated as "+" (probable typo).`);
+    // Typing "+1" into Excel often converts to "=1" (formula syntax); treat as "+" silently.
     s = '+' + s.slice(1);
   }
   const m = s.match(/^([+\-×])(-?\d+)/);
@@ -147,10 +147,20 @@ function parseScooterAbility(text, context) {
   return {};
 }
 
+function findFishInText(text, fishList) {
+  if (!text || !fishList) return null;
+  const t = text.toLowerCase();
+  const sorted = [...fishList].filter(f => f.name).sort((a, b) => b.name.length - a.name.length);
+  for (const f of sorted) {
+    if (t.includes(f.name.toLowerCase())) return f;
+  }
+  return null;
+}
+
 /**
  * Turn a quest sentence into a machine-checkable rule (or null if unknown).
  */
-function parseQuest(text, context) {
+function parseQuest(text, context, fishList = []) {
   const t = str(text);
   const lower = t.toLowerCase().replace(/[\u2212\u2013]/g, '-').replace(/[x\u00D7]/g, '×');
   const opsIn = (s) => (s.match(/[+\-×]-?\d+/g) || []).map(o => parseOperation(o, context)?.label).filter(Boolean);
@@ -161,11 +171,38 @@ function parseQuest(text, context) {
   if (/negative fish target/.test(lower)) return { type: 'defeat_negative_fish' };
   if (/negative multiplier/.test(lower)) return { type: 'success_with_card', action: 'attack', negativeMultiplier: true };
 
+  // Defeating a fish with N cards: e.g. "Use 5 cards to defeat a fish"
+  const cardsToDefeat = lower.match(/(?:use|using|with) (?:at least )?(\w+) cards? to defeat a (?:fish|monster)|defeat a (?:fish|monster) (?:using|with) (?:at least )?(\w+) cards?/);
+  if (cardsToDefeat) {
+    const rawVal = cardsToDefeat[1] || cardsToDefeat[2];
+    const count = WORD_NUMBERS[rawVal] ?? (parseInt(rawVal, 10) || 1);
+    return { type: 'defeat_fish_with_cards_count', count };
+  }
+
+  // Defeat specific named fish, e.g. "Defeat Swordfish with a Sword"
+  if (/defeat /i.test(lower)) {
+    const matchedFish = findFishInText(lower, fishList);
+    if (matchedFish) {
+      return { type: 'defeat_specific_fish', fishId: matchedFish.id, fishName: matchedFish.name };
+    }
+  }
+
+  // Claim negative treasure
   const claimCountWord = lower.match(/claim (\w+) negative/);
   if (claimCountWord && WORD_NUMBERS[claimCountWord[1]] > 1) {
     return { type: 'claim_treasure', negative: true, count: WORD_NUMBERS[claimCountWord[1]] };
   }
-  if (/claim a negative/.test(lower)) return { type: 'claim_treasure', negative: true, count: 1 };
+  if (/claim (?:a |one )?negative/.test(lower) || /negative-target treasure/.test(lower)) {
+    return { type: 'claim_treasure', negative: true, count: 1 };
+  }
+
+  // General treasure count: e.g. "Get at least 2 treasure cards", "Claim 2 treasures"
+  const generalTreasure = lower.match(/(?:get|claim|collect|acquire|hold) (?:at least )?(\w+) treasure(?: card)?s?/);
+  if (generalTreasure) {
+    const count = WORD_NUMBERS[generalTreasure[1]] ?? (parseInt(generalTreasure[1], 10) || 1);
+    return { type: 'claim_treasure', count };
+  }
+
   const gemQ = lower.match(/claim a (?:treasure worth )?(\d+)[ -]gem/);
   if (gemQ) return { type: 'claim_treasure', gems: parseInt(gemQ[1], 10), count: 1 };
   if (/claim a .*multiplication treasure/.test(lower)) return { type: 'claim_treasure', usingOp: '×', count: 1 };
@@ -209,14 +246,33 @@ function importWorkbook(file) {
     const rulesText = str(r['Encounter Selection Rules']);
     const fishCount = num(r['Fish per Adventure'], 5);
 
-    // Fixed final fish: a fish name appearing in a sentence that mentions "final"
+    let startFishId = null;
     let finalFishId = null;
-    for (const sentence of rulesText.split(/[;.]/)) {
-      if (!/final/i.test(sentence)) continue;
-      const hit = fish.find(f => f.name && sentence.toLowerCase().includes(f.name.toLowerCase()));
-      if (hit) finalFishId = hit.id;
+    let fixedFishIds = null;
+
+    // Check for fixed N encounters (e.g. "Fixed 4 encounters: Sea A cards 1-4 in order")
+    const fixedM = rulesText.match(/fixed (\d+) encounters?: sea ([a-g]) cards 1-(\d+) in order/i);
+    if (fixedM) {
+      const targetSea = fixedM[2].toUpperCase();
+      const count = parseInt(fixedM[3], 10);
+      fixedFishIds = fish.filter(f => f.sea === targetSea).slice(0, count).map(f => f.id);
     }
-    const randomised = SEA_ORDER.indexOf(letter) >= SEA_ORDER.indexOf('C');
+
+    // Parse clauses for starting and finishing fish
+    for (const sentence of rulesText.split(/[;.]/)) {
+      const s = sentence.trim();
+      if (!s) continue;
+      if (/start with|begins? with|first encounter/i.test(s)) {
+        const hit = findFishInText(s, fish);
+        if (hit) startFishId = hit.id;
+      }
+      if (/finish with|ends? with|final encounter/i.test(s)) {
+        const hit = findFishInText(s, fish);
+        if (hit) finalFishId = hit.id;
+      }
+    }
+
+    const randomised = /random/i.test(rulesText) || SEA_ORDER.indexOf(letter) >= SEA_ORDER.indexOf('C');
 
     return {
       id,
@@ -227,7 +283,9 @@ function importWorkbook(file) {
       encounterRulesText: rulesText,
       fishPerAdventure: fishCount,
       randomised,
+      startFishId,
       finalFishId,
+      fixedFishIds,
       newNumberCardsText: str(r['Number Cards'])
     };
   });
@@ -295,7 +353,7 @@ function importWorkbook(file) {
         text,
         gems: num(gemsRaw, 0),
         gemsTbd: gemsRaw === '' || gemsRaw === undefined,
-        rule: parseQuest(text, `Sea ${letter} quest ${n}`)
+        rule: parseQuest(text, `Sea ${letter} quest ${n}`, fish)
       };
     }).filter(Boolean);
   }

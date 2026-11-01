@@ -225,36 +225,65 @@ console.log('   ✓ Scooter starting treasure abilities verified.');
 
 // Test 9: Sea Quests Tracking & Payouts
 console.log('9. Testing repeatable Sea Quests tracking...');
-const questGame = new GameState({ sea: 'A' });
-const qList = questGame.quests.quests;
-assert.strictEqual(qList.length, 3, 'Sea A has 3 quests');
 
-// Quest 1: Defeat the first fish
+// 9a. Sea A Quest 1 ("Defeat Swordfish with a Sword") & Quest 2 ("Get at least 2 treasure cards")
+const questGame = new GameState({
+  sea: 'A',
+  encounters: [{ id: 'A_Fish_4', name: 'Swordfish with a Sword', target: 10, targets: [10], remainingTargets: [10] }]
+});
+const qList = questGame.quests.quests;
+assert.strictEqual(qList.length, 2, 'Sea A has 2 quests in current spreadsheet');
+
+// Defeat Swordfish with a Sword
 questGame.hand.push({ uid: 'q_c10', type: 'number', op: '+', value: 10, label: '+10', target: 10 });
 questGame.playAttack([questGame.hand.find(c => c.uid === 'q_c10')]);
-assert.strictEqual(qList[0].completed, true, 'Quest 1 ("Defeat first fish") completed');
+assert.strictEqual(qList[0].completed, true, 'Quest 1 ("Defeat Swordfish with a Sword") completed');
 
-// Quest 2: Buy a number card from the market
-const qM0 = questGame.market[0];
-questGame.hand.push({ uid: 'q_buyer', type: 'number', op: '+', value: qM0.target, label: `+${qM0.target}`, target: qM0.target });
-questGame.playBuy('market', 0, [questGame.hand.find(c => c.uid === 'q_buyer')]);
-assert.strictEqual(qList[1].completed, true, 'Quest 2 ("Buy a number card") completed');
-console.log('   ✓ Sea quests auto-tracking and completion verified.');
+// Claim 2 treasures for Quest 2
+questGame.treasureStockpile = [
+  { uid: 't1', id: 'T_1', type: 'treasure', name: 'Shell', target: 1, gems: 1 },
+  { uid: 't2', id: 'T_2', type: 'treasure', name: 'Pearl', target: 2, gems: 1 }
+];
+questGame.hand.push({ uid: 'q_t1', type: 'number', op: '+', value: 1, label: '+1', target: 1 });
+questGame.playBuy('stockpile', 0, [questGame.hand.find(c => c.uid === 'q_t1')]);
+assert.strictEqual(qList[1].completed, false, 'Quest 2 not completed after 1 treasure');
+
+questGame.hand.push({ uid: 'q_t2', type: 'number', op: '+', value: 2, label: '+2', target: 2 });
+questGame.playBuy('stockpile', 0, [questGame.hand.find(c => c.uid === 'q_t2')]);
+assert.strictEqual(qList[1].completed, true, 'Quest 2 ("Get at least 2 treasure cards") completed');
+
+// 9b. Sea F Quest 1: "Use 5 cards to defeat a fish"
+const qGameF = new GameState({
+  sea: 'F',
+  encounters: [{ id: 'F_Fish_2', name: 'Hammerhead Shark', target: 5, targets: [5], remainingTargets: [5] }]
+});
+const fiveCards = [1, 2, 3, 4, 5].map(i => ({ uid: `f5_${i}`, type: 'number', op: '+', value: 1, label: '+1', target: 1 }));
+qGameF.hand.push(...fiveCards);
+qGameF.playAttack(fiveCards);
+assert.strictEqual(qGameF.quests.quests[0].completed, true, 'Sea F Quest 1 ("Use 5 cards to defeat a fish") completed');
+
+// 9c. Sea C encounter rules: Start with Moray Eel, randomised centre, finish with Anglerfish
+const encC = buildEncounters('C');
+assert.strictEqual(encC.length, 5, 'Sea C has 5 encounters');
+assert.strictEqual(encC[0].name, 'Moray Eel', 'Sea C starts with Moray Eel');
+assert.strictEqual(encC[4].name, 'Anglerfish', 'Sea C finishes with Anglerfish');
+
+console.log('   ✓ Sea quests auto-tracking, Sea C start/finish rules, and completion verified.');
 
 // Test 10: Final Fish Defeat & Victory Lap
 console.log('10. Testing final fish defeat and Victory Lap...');
 const victoryGame = new GameState({
-  sea: 'A',
-  encounters: [{ id: 'A_Fish_4', name: 'Swordfish with a Sword', target: 24 }]
+  sea: 'B',
+  encounters: [{ id: 'B_Fish_2', name: 'Snappy Schnapper', target: 24, targets: [24], remainingTargets: [24] }]
 });
 victoryGame.currentBolts = 1;
 victoryGame.hand.push({ uid: 'v_c24', type: 'number', op: '+', value: 24, label: '+24', target: 24 });
 victoryGame.playAttack([victoryGame.hand.find(c => c.uid === 'v_c24')]);
 
 assert.strictEqual(victoryGame.status, 'post_game', 'Transitions to post_game (Victory Lap)');
-assert.strictEqual(victoryGame.currentBolts, 4, 'Refills battery to max for Victory Lap');
+assert.strictEqual(victoryGame.currentBolts, victoryGame.maxBolts, 'Refills battery to max for Victory Lap');
 assert.strictEqual(victoryGame.treasureStockpile.length, 1, 'Stockpile has final revealed treasure');
-assert.strictEqual(victoryGame.quests.quests[2].completed, true, 'Quest 3 ("Complete Sea A") completed');
+assert.strictEqual(victoryGame.quests.quests.find(q => q.rule?.type === 'complete_sea').completed, true, 'Quest ("Complete Sea B") completed');
 
 // Claim treasure in Victory Lap
 const vTreasure = victoryGame.treasureStockpile[0];

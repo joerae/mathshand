@@ -58,6 +58,17 @@ export class QuestTracker {
       case 'defeat_negative_fish':
         return event.type === 'attack_hit' && event.defeated && event.fish.targets.some(t => t < 0);
 
+      case 'defeat_specific_fish':
+        return event.type === 'attack_hit' &&
+          event.defeated &&
+          ((r.fishId && event.fish?.id === r.fishId) ||
+           (r.fishName && event.fish?.name?.toLowerCase().includes(r.fishName.toLowerCase())));
+
+      case 'defeat_fish_with_cards_count':
+        return event.type === 'attack_hit' &&
+          event.defeated &&
+          cards.length >= (r.count || 1);
+
       case 'success_with_card': {
         if (!isSuccess) return false;
         if (r.action === 'attack' && event.type !== 'attack_hit') return false;
