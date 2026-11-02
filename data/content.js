@@ -127,51 +127,62 @@ function makeEncounter(def) {
 /**
  * Builds the ordered fish encounters for a sea.
  *
- * - The sea's own (newly unlocked) fish always appear.
- * - A fixed final fish named in the Sea's encounter rules is always last.
- * - Remaining slots are filled from fish unlocked in earlier seas.
- * - Seas A–B: fixed, spreadsheet order (earlier fish first, new fish last).
- * - Sea C onwards: filler fish chosen at random and all non-final fish shuffled.
+ * Uses the explicit Fish 1 to Fish 5 slots from the spreadsheet:
+ * - Specific fish in a slot (e.g. Fish 1, Fish 5) appear at that exact position.
+ * - Empty slots (where no fish is specified) are filled using the random selection rules:
+ *   newly unlocked fish for this sea appear first, remainder from earlier seas.
+ * - Omitted slots (e.g. "(none)" in Sea A) are excluded.
  */
 export function buildEncounters(letter, rng = Math.random) {
   const sea = getSea(letter);
   if (!sea) throw new Error(`Unknown sea "${letter}"`);
 
-  // Fixed encounter sequence override (e.g. Sea A cards 1-4 in order)
-  if (sea.fixedFishIds && sea.fixedFishIds.length) {
-    const list = sea.fixedFishIds.map(id => GAME_DATA.fish.find(f => f.id === id)).filter(Boolean);
-    return list.map(makeEncounter);
+  // Explicit fish slots from the spreadsheet (Fish 1 to Fish 5)
+  const slots = (sea.fishSlots && sea.fishSlots.length)
+    ? sea.fishSlots
+    : (sea.fixedFishIds || Array(sea.fishPerAdventure || 5).fill(null));
+
+  const totalSlots = slots.length;
+
+  // 1. If all slots are explicitly fixed (e.g. Sea A: 4 fixed fish)
+  if (slots.every(id => id !== null)) {
+    return slots.map(id => GAME_DATA.fish.find(f => f.id === id)).filter(Boolean).map(makeEncounter);
   }
 
-  const startFish = sea.startFishId ? GAME_DATA.fish.find(f => f.id === sea.startFishId) : null;
-  const finalFish = sea.finalFishId ? GAME_DATA.fish.find(f => f.id === sea.finalFishId) : null;
+  // 2. Identify fish already fixed in specific slots
+  const fixedFish = slots.map(id => id ? GAME_DATA.fish.find(f => f.id === id) : null);
+  const fixedSet = new Set(fixedFish.filter(Boolean));
 
-  const own = GAME_DATA.fish.filter(f => f.sea === sea.letter && f !== startFish && f !== finalFish);
-  const earlier = GAME_DATA.fish.filter(f => seaIndex(f.sea) < seaIndex(sea.letter) && f !== startFish && f !== finalFish);
+  // 3. Count empty slots that need to be filled with random selection rules
+  const emptyCount = slots.filter(s => s === null).length;
 
-  const slots = sea.fishPerAdventure;
-  const fixedCount = (startFish ? 1 : 0) + (finalFish ? 1 : 0);
-  const neededMiddle = Math.max(0, slots - fixedCount);
+  // 4. Candidate fish unlocked up to this sea, excluding ones already locked into fixed slots
+  const own = GAME_DATA.fish.filter(f => f.sea === sea.letter && !fixedSet.has(f));
+  const earlier = GAME_DATA.fish.filter(f => seaIndex(f.sea) < seaIndex(sea.letter) && !fixedSet.has(f));
 
-  let middle = [];
-  if (own.length >= neededMiddle) {
-    middle = sea.randomised ? shuffle(own, rng).slice(0, neededMiddle) : own.slice(0, neededMiddle);
+  // 5. Prioritize newly unlocked fish in this sea that aren't already placed, then earlier fish
+  let filler = [];
+  if (own.length >= emptyCount) {
+    filler = sea.randomised ? shuffle(own, rng).slice(0, emptyCount) : own.slice(0, emptyCount);
   } else {
-    const fillCount = neededMiddle - own.length;
-    const filler = sea.randomised
-      ? shuffle(earlier, rng).slice(0, fillCount)
-      : earlier.slice(0, fillCount);
-    middle = [...own, ...filler];
+    const needEarlier = emptyCount - own.length;
+    const fromEarlier = sea.randomised ? shuffle(earlier, rng).slice(0, needEarlier) : earlier.slice(0, needEarlier);
+    filler = [...own, ...fromEarlier];
     if (sea.randomised) {
-      middle = shuffle(middle, rng);
+      filler = shuffle(filler, rng);
     }
   }
 
-  const ordered = [
-    ...(startFish ? [startFish] : []),
-    ...middle,
-    ...(finalFish ? [finalFish] : [])
-  ];
+  // 6. Place fixed and filler fish into their designated slot positions
+  let fillerIdx = 0;
+  const ordered = [];
+  for (let i = 0; i < totalSlots; i++) {
+    if (fixedFish[i]) {
+      ordered.push(fixedFish[i]);
+    } else if (fillerIdx < filler.length) {
+      ordered.push(filler[fillerIdx++]);
+    }
+  }
 
-  return ordered.slice(0, Math.max(slots, ordered.length)).map(makeEncounter);
+  return ordered.map(makeEncounter);
 }

@@ -1,14 +1,14 @@
 /**
  * AUTO-GENERATED FILE — DO NOT EDIT BY HAND.
  *
- * Generated from: data/Maths_Handbuilder_Card_Content_v6(1).xlsx
+ * Source: Google Docs (online)
  * Regenerate with: npm run import-data
  *
- * Edit the spreadsheet instead; it is the source of truth for all game content.
+ * Edit the spreadsheet or Google Doc; it is the source of truth for all game content.
  */
 export const GAME_DATA = {
-  "source": "Maths_Handbuilder_Card_Content_v6(1).xlsx",
-  "importedAt": "2026-11-02T03:44:43.745Z",
+  "source": "Google Docs (online)",
+  "importedAt": "2026-11-02T20:50:23.817Z",
   "seaOrder": [
     "A",
     "B",
@@ -31,13 +31,19 @@ export const GAME_DATA = {
       "encounterRulesText": "Fixed 4 encounters: Sea A cards 1-4 in order",
       "fishPerAdventure": 4,
       "randomised": false,
-      "startFishId": null,
-      "finalFishId": null,
+      "fishSlots": [
+        "A_Fish",
+        "A_Fish_2",
+        "A_Fish_3",
+        "A_Fish_2"
+      ],
+      "startFishId": "A_Fish",
+      "finalFishId": "A_Fish_2",
       "fixedFishIds": [
         "A_Fish",
         "A_Fish_2",
         "A_Fish_3",
-        "A_Fish_4"
+        "A_Fish_2"
       ],
       "newNumberCardsText": "+1,+2,+3,+4,+5,+6,+7,+8,+9"
     },
@@ -50,6 +56,13 @@ export const GAME_DATA = {
       "encounterRulesText": "Start with Clownfish with a Chainsaw. Rest are random",
       "fishPerAdventure": 5,
       "randomised": true,
+      "fishSlots": [
+        "A_Fish",
+        null,
+        null,
+        null,
+        null
+      ],
       "startFishId": "A_Fish",
       "finalFishId": null,
       "fixedFishIds": null,
@@ -64,6 +77,13 @@ export const GAME_DATA = {
       "encounterRulesText": "Start with Moray Eel. Randomised Centre. Finish with Anglerfish",
       "fishPerAdventure": 5,
       "randomised": true,
+      "fishSlots": [
+        "C_Fish",
+        null,
+        null,
+        null,
+        "C_Fish_2"
+      ],
       "startFishId": "C_Fish",
       "finalFishId": "C_Fish_2",
       "fixedFishIds": null,
@@ -75,11 +95,18 @@ export const GAME_DATA = {
       "name": "Double Trouble",
       "description": "Getting used to multiplying with x2 and x10",
       "mathsFocus": "×2 and ×10",
-      "encounterRulesText": "Sea-specific encounter selection; randomisation available since Sea C",
+      "encounterRulesText": "Start with Lionfish. Rest are random",
       "fishPerAdventure": 5,
       "randomised": true,
-      "startFishId": null,
-      "finalFishId": null,
+      "fishSlots": [
+        "B_Fish",
+        null,
+        null,
+        null,
+        "D_Fish_2"
+      ],
+      "startFishId": "B_Fish",
+      "finalFishId": "D_Fish_2",
       "fixedFishIds": null,
       "newNumberCardsText": "x2, x10"
     },
@@ -89,11 +116,18 @@ export const GAME_DATA = {
       "name": "Multiplication Reef",
       "description": "Get used to multiplying x3,x4,x5",
       "mathsFocus": "×3, ×4, ×5",
-      "encounterRulesText": "Start with Lionfish",
+      "encounterRulesText": "Start with Electric eel. Finish with Hydra",
       "fishPerAdventure": 5,
       "randomised": true,
-      "startFishId": "B_Fish",
-      "finalFishId": null,
+      "fishSlots": [
+        "A_Fish_2",
+        null,
+        null,
+        null,
+        "E_Fish_2"
+      ],
+      "startFishId": "A_Fish_2",
+      "finalFishId": "E_Fish_2",
       "fixedFishIds": null,
       "newNumberCardsText": "x3,x4,x5"
     },
@@ -106,8 +140,15 @@ export const GAME_DATA = {
       "encounterRulesText": "Random/curated as needed",
       "fishPerAdventure": 5,
       "randomised": true,
+      "fishSlots": [
+        null,
+        null,
+        null,
+        null,
+        "F_Fish"
+      ],
       "startFishId": null,
-      "finalFishId": null,
+      "finalFishId": "F_Fish",
       "fixedFishIds": null,
       "newNumberCardsText": "-6,-7,-8,-9, x-2(?)"
     },
@@ -120,6 +161,13 @@ export const GAME_DATA = {
       "encounterRulesText": "Great White Shark is the fixed final encounter; earlier fish selected from Sea G eligible pool (details TBD)",
       "fishPerAdventure": 5,
       "randomised": true,
+      "fishSlots": [
+        null,
+        null,
+        null,
+        null,
+        "G_Fish"
+      ],
       "startFishId": null,
       "finalFishId": "G_Fish",
       "fixedFishIds": null,
@@ -189,7 +237,7 @@ export const GAME_DATA = {
       "abilities": {},
       "concept": "Larger addition starting toolkit",
       "status": "Proposed",
-      "notes": "Working concept: different starting hand; costs/capacity to playtest."
+      "notes": ""
     },
     {
       "id": "C_Scooter",
@@ -233,15 +281,27 @@ export const GAME_DATA = {
       "abilities": {},
       "concept": "Subtraction-focused scooter",
       "status": "Working",
-      "notes": "Spec explicitly discussed."
+      "notes": ""
     },
     {
       "id": "D_Scooter",
       "sea": "D",
       "name": "Double Drive Scooter",
-      "battery": 4,
-      "handCapacity": 7,
+      "battery": 3,
+      "handCapacity": 8,
       "startingHand": [
+        {
+          "op": "+",
+          "value": 1,
+          "label": "+1",
+          "target": 1
+        },
+        {
+          "op": "+",
+          "value": 2,
+          "label": "+2",
+          "target": 2
+        },
         {
           "op": "+",
           "value": 6,
@@ -249,35 +309,23 @@ export const GAME_DATA = {
           "target": 6
         },
         {
-          "op": "+",
-          "value": 8,
-          "label": "+8",
-          "target": 8
-        },
-        {
-          "op": "×",
-          "value": 2,
-          "label": "×2",
-          "target": 2
+          "op": "-",
+          "value": 3,
+          "label": "−3",
+          "target": 3
         },
         {
           "op": "×",
           "value": 10,
           "label": "×10",
           "target": 10
-        },
-        {
-          "op": "-",
-          "value": 3,
-          "label": "−3",
-          "target": 3
         }
       ],
       "abilityText": "",
       "abilities": {},
       "concept": "Highlights ×2 and ×10",
       "status": "Proposed",
-      "notes": "Candidate; ×10 available to buy."
+      "notes": ""
     },
     {
       "id": "E_Scooter",
@@ -355,13 +403,13 @@ export const GAME_DATA = {
           "target": 9
         }
       ],
-      "abilityText": "Reveal additional treasure at start",
+      "abilityText": "Reveal additional treasure at start.",
       "abilities": {
         "revealTreasuresAtStart": 1
       },
       "concept": "Larger Multiplicaiton",
       "status": "Proposed",
-      "notes": "Negative multiplier is speculative; could instead use minus-card focus."
+      "notes": ""
     },
     {
       "id": "G_Scooter",
@@ -395,13 +443,13 @@ export const GAME_DATA = {
           "target": 8
         }
       ],
-      "abilityText": "Reveal two treasure cards at start",
+      "abilityText": "Reveal two treasure cards at start.",
       "abilities": {
         "revealTreasuresAtStart": 2
       },
       "concept": "Starts with 2 treasure cards revealed; demanding trade-off",
       "status": "Proposed",
-      "notes": "Could move to an earlier sea or replace one of the others to keep six scooters. Moved from draft Sea H; provisional placement."
+      "notes": ""
     }
   ],
   "numberCards": [
@@ -412,7 +460,7 @@ export const GAME_DATA = {
       "value": 1,
       "label": "+1",
       "target": 1,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -424,7 +472,7 @@ export const GAME_DATA = {
       "value": 2,
       "label": "+2",
       "target": 2,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -436,7 +484,7 @@ export const GAME_DATA = {
       "value": 3,
       "label": "+3",
       "target": 3,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -448,7 +496,7 @@ export const GAME_DATA = {
       "value": 4,
       "label": "+4",
       "target": 4,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -460,7 +508,7 @@ export const GAME_DATA = {
       "value": 5,
       "label": "+5",
       "target": 5,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -472,7 +520,7 @@ export const GAME_DATA = {
       "value": 6,
       "label": "+6",
       "target": 6,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -484,7 +532,7 @@ export const GAME_DATA = {
       "value": 7,
       "label": "+7",
       "target": 7,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -496,7 +544,7 @@ export const GAME_DATA = {
       "value": 8,
       "label": "+8",
       "target": 8,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -508,7 +556,7 @@ export const GAME_DATA = {
       "value": 9,
       "label": "+9",
       "target": 9,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Addition",
       "status": "Working",
       "enabled": true
@@ -520,7 +568,7 @@ export const GAME_DATA = {
       "value": 10,
       "label": "+10",
       "target": 10,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended addition",
       "status": "Working",
       "enabled": true
@@ -532,7 +580,7 @@ export const GAME_DATA = {
       "value": 12,
       "label": "+12",
       "target": 12,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended addition",
       "status": "Working",
       "enabled": true
@@ -544,7 +592,7 @@ export const GAME_DATA = {
       "value": 20,
       "label": "+20",
       "target": 20,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended addition",
       "status": "Working",
       "enabled": true
@@ -556,7 +604,7 @@ export const GAME_DATA = {
       "value": 1,
       "label": "−1",
       "target": 1,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Subtraction",
       "status": "Working",
       "enabled": true
@@ -568,7 +616,7 @@ export const GAME_DATA = {
       "value": 2,
       "label": "−2",
       "target": 2,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Subtraction",
       "status": "Working",
       "enabled": true
@@ -580,7 +628,7 @@ export const GAME_DATA = {
       "value": 3,
       "label": "−3",
       "target": 3,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Subtraction",
       "status": "Working",
       "enabled": true
@@ -592,7 +640,7 @@ export const GAME_DATA = {
       "value": 4,
       "label": "−4",
       "target": 4,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Subtraction",
       "status": "Working",
       "enabled": true
@@ -604,7 +652,7 @@ export const GAME_DATA = {
       "value": 5,
       "label": "−5",
       "target": 5,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Subtraction",
       "status": "Working",
       "enabled": true
@@ -616,7 +664,7 @@ export const GAME_DATA = {
       "value": 10,
       "label": "−10",
       "target": 10,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Subtraction",
       "status": "Working",
       "enabled": true
@@ -628,7 +676,7 @@ export const GAME_DATA = {
       "value": 2,
       "label": "×2",
       "target": 2,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Basic multiplication",
       "status": "Working",
       "enabled": true
@@ -640,7 +688,7 @@ export const GAME_DATA = {
       "value": 10,
       "label": "×10",
       "target": 10,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Basic multiplication",
       "status": "Working",
       "enabled": true
@@ -652,7 +700,7 @@ export const GAME_DATA = {
       "value": 3,
       "label": "×3",
       "target": 3,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "More multiplication",
       "status": "Working",
       "enabled": true
@@ -664,7 +712,7 @@ export const GAME_DATA = {
       "value": 4,
       "label": "×4",
       "target": 4,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "More multiplication",
       "status": "Working",
       "enabled": true
@@ -676,7 +724,7 @@ export const GAME_DATA = {
       "value": 5,
       "label": "×5",
       "target": 5,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "More multiplication",
       "status": "Working",
       "enabled": true
@@ -688,7 +736,7 @@ export const GAME_DATA = {
       "value": 6,
       "label": "−6",
       "target": 6,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended subtraction",
       "status": "Working",
       "enabled": true
@@ -700,7 +748,7 @@ export const GAME_DATA = {
       "value": 7,
       "label": "−7",
       "target": 7,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended subtraction",
       "status": "Working",
       "enabled": true
@@ -712,7 +760,7 @@ export const GAME_DATA = {
       "value": 8,
       "label": "−8",
       "target": 8,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended subtraction",
       "status": "Working",
       "enabled": true
@@ -724,7 +772,7 @@ export const GAME_DATA = {
       "value": 9,
       "label": "−9",
       "target": 9,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended subtraction",
       "status": "Working",
       "enabled": true
@@ -736,7 +784,7 @@ export const GAME_DATA = {
       "value": 6,
       "label": "×6",
       "target": 6,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended times tables",
       "status": "Working",
       "enabled": true
@@ -748,7 +796,7 @@ export const GAME_DATA = {
       "value": 7,
       "label": "×7",
       "target": 7,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended times tables",
       "status": "Working",
       "enabled": true
@@ -760,7 +808,7 @@ export const GAME_DATA = {
       "value": 8,
       "label": "×8",
       "target": 8,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended times tables",
       "status": "Working",
       "enabled": true
@@ -772,7 +820,7 @@ export const GAME_DATA = {
       "value": 9,
       "label": "×9",
       "target": 9,
-      "copies": 3,
+      "copies": 2,
       "mathsType": "Extended times tables",
       "status": "Working",
       "enabled": true
@@ -896,10 +944,10 @@ export const GAME_DATA = {
       "sea": "E",
       "name": "Kraken Takin’ a Break’n",
       "copies": 1,
-      "target": 35,
-      "abilityText": "Discard two number cards of your choice when encountered",
+      "target": 25,
+      "abilityText": "Discard one number card of your choice when defeated",
       "abilities": {
-        "discardOnEncounter": 2
+        "discardOnEncounter": 1
       },
       "encounterStatus": "Available",
       "notes": ""
@@ -909,7 +957,7 @@ export const GAME_DATA = {
       "sea": "E",
       "name": "Hydra",
       "copies": 1,
-      "target": -24,
+      "target": 35,
       "abilityText": "Must land two separate targets (35 and 63); two successful attacks",
       "abilities": {
         "multiTargets": [
@@ -926,7 +974,7 @@ export const GAME_DATA = {
       "name": "Theiving Squid",
       "copies": 1,
       "target": 48,
-      "abilityText": "All unclaimed treasures disappear when encountered",
+      "abilityText": "All unclaimed treasures disappear when defeated",
       "abilities": {
         "destroyTreasureOnEncounter": true
       },
@@ -936,11 +984,13 @@ export const GAME_DATA = {
     {
       "id": "F_Fish_2",
       "sea": "F",
-      "name": "Hammerhead Shark",
+      "name": "Parrotfish with a Parrot",
       "copies": 1,
-      "target": 56,
-      "abilityText": "",
-      "abilities": {},
+      "target": -21,
+      "abilityText": "Discard one number cards of your choice when defeated",
+      "abilities": {
+        "discardOnEncounter": 1
+      },
       "encounterStatus": "Available",
       "notes": ""
     },
@@ -963,7 +1013,7 @@ export const GAME_DATA = {
       "target": -88,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Fixed final encounter in Sea G",
+      "encounterStatus": "",
       "notes": "Moved from Sea A to Sea G; target 98 retained."
     }
   ],

@@ -12,7 +12,7 @@ Based on [`Design Docs/# Maths Handbuilder WIP.md`](./Design%20Docs/%23%20Maths%
    ```bash
    npm start
    ```
-   *(runs `scripts/import_xlsx.mjs` automatically before starting)*
+   *(fetches the latest Google Docs spreadsheet and updates data automatically before starting)*
 
 2. Open your web browser to:
    ```
@@ -26,14 +26,21 @@ Based on [`Design Docs/# Maths Handbuilder WIP.md`](./Design%20Docs/%23%20Maths%
 
 ---
 
-## 📊 Spreadsheet as the Single Source of Truth
+## 📊 Live Spreadsheet as the Single Source of Truth
 
 All game cards, values, quantities, encounter sequences, scooter capabilities, and quest rules are driven directly by the spreadsheet:
-- **Location**: `data/Maths_Handbuilder_Card_Content_v6(1).xlsx` (or any newer `.xlsx` dropped into `data/`).
-- **Importer script**: `npm run import-data` (or `node scripts/import_xlsx.mjs`).
+- **Live Google Docs Spreadsheet**: Fetched automatically online via the published XLSX endpoint.
+- **Offline / Local Fallback**: `data/Maths_Handbuilder_Card_Content_v6(1).xlsx` (synced on every fetch).
+- **Importer script**: `npm run import-data` (or `npm run import-data -- --local` to force local).
 - **Generated data**: `data/game_data.js` and `data/content.js`.
 
-Whenever you edit and save the spreadsheet, run `npm run import-data` (or simply `npm start` / `npm test`), and all game data will immediately update!
+Whenever you edit the Google Doc or save a local Excel file, run `npm run import-data` (or simply `npm start` / `npm test`), and all game data will immediately update!
+
+### Explicit Fish Encounter Columns (Fish 1 to Fish 5)
+The `Seas` sheet defines encounters via columns **`Fish 1`** through **`Fish 5`**:
+- **Named Fish** (e.g. `Clownfish with a Chainsaw`, `Anglerfish`): Locked into that exact encounter slot.
+- **`(none)`**: Indicates that slot is excluded (e.g. Sea A has 4 encounters, so Fish 5 is `(none)`).
+- **Empty / Blank**: Filled dynamically using the sea's random selection rules (own newly unlocked fish appear first, remainder drawn from earlier unlocked fish).
 
 ---
 

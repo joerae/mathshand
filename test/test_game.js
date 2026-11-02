@@ -43,30 +43,30 @@ const startHandA = buildStartingHand(scooterA);
 assert.deepStrictEqual(startHandA.map(c => c.label), ['+1', '+2', '+3']);
 
 const drawA = buildDrawPile('A');
-assert.strictEqual(drawA.length, 27, 'Sea A draw pile has 27 cards (9 numbers × 3 copies)');
+assert.strictEqual(drawA.length, 18, 'Sea A draw pile has 18 cards (9 numbers × 2 copies)');
 assert.strictEqual(drawA.every(c => c.op === '+'), true, 'Sea A has only addition');
 
 const encA = buildEncounters('A');
-assert.strictEqual(encA.length, 4, 'Sea A has 4 encounters');
+assert.strictEqual(encA.length, 4, 'Sea A has 4 encounters (Fish 5 is (none))');
 assert.deepStrictEqual(encA.map(f => f.name), [
   'Clownfish with a Chainsaw',
   'Electric Eel',
   'Pufferfish in a Puffer Jacket',
-  'Swordfish with a Sword'
+  'Electric Eel'
 ]);
-console.log('   ✓ Sea A setup, Underwater Scooter, 27-card draw deck, and 4 fixed fish verified.');
+console.log('   ✓ Sea A setup, Underwater Scooter, 18-card draw deck, and 4 explicit fish slots verified.');
 
 // Test 3: Cumulative Unlocks across Seas (A..G)
 console.log('3. Checking cumulative card unlocks across Seas...');
 const drawB = buildDrawPile('B');
-assert.strictEqual(drawB.length, 36, 'Sea B has 27 (A) + 9 (B) = 36 cards');
+assert.strictEqual(drawB.length, 24, 'Sea B has 18 (A) + 6 (B) = 24 cards');
 
 const drawC = buildDrawPile('C');
-assert.strictEqual(drawC.length, 54, 'Sea C has 36 + 18 (negative cards) = 54 cards');
+assert.strictEqual(drawC.length, 36, 'Sea C has 24 + 12 (negative cards) = 36 cards');
 assert.strictEqual(drawC.some(c => c.op === '-'), true, 'Sea C introduces subtraction');
 
 const drawD = buildDrawPile('D');
-assert.strictEqual(drawD.length, 60, 'Sea D has 54 + 6 (×2, ×10) = 60 cards');
+assert.strictEqual(drawD.length, 40, 'Sea D has 36 + 4 (×2, ×10) = 40 cards');
 
 // Scooters unlocked up to Sea C
 const scootersC = scootersForSea('C');
@@ -85,7 +85,7 @@ assert.strictEqual(game.currentBolts, 4);
 assert.strictEqual(game.maxHandCapacity, 8);
 assert.strictEqual(game.hand.length, 3);
 assert.strictEqual(game.market.length, 5);
-assert.strictEqual(game.drawPile.length, 27 - 5);
+assert.strictEqual(game.drawPile.length, 18 - 5);
 
 // Attack costs 1 bolt, number cards return to hand
 const atkMiss = game.playAttack([game.hand[0]]);
@@ -223,8 +223,8 @@ assert.strictEqual(gGame.scooter.name, 'Treasure Hunter');
 assert.strictEqual(gGame.treasureStockpile.length, 2, 'Treasure Hunter reveals 2 extra treasures at start');
 console.log('   ✓ Scooter starting treasure abilities verified.');
 
-// Test 9: Sea Quests Tracking & Payouts
-console.log('9. Testing repeatable Sea Quests tracking...');
+// Test 9: Sea Quests & Encounter Rules across Seas
+console.log('9. Testing repeatable Sea Quests tracking & explicit fish slot rules...');
 
 // 9a. Sea A Quest 1 ("Defeat Swordfish with a Sword") & Quest 2 ("Get at least 2 treasure cards")
 const questGame = new GameState({
@@ -262,13 +262,28 @@ qGameF.hand.push(...fiveCards);
 qGameF.playAttack(fiveCards);
 assert.strictEqual(qGameF.quests.quests[0].completed, true, 'Sea F Quest 1 ("Use 5 cards to defeat a fish") completed');
 
-// 9c. Sea C encounter rules: Start with Moray Eel, randomised centre, finish with Anglerfish
+// 9c. Sea C explicit fish slots: Start with Moray Eel (Fish 1), randomised centre, finish with Anglerfish (Fish 5)
 const encC = buildEncounters('C');
 assert.strictEqual(encC.length, 5, 'Sea C has 5 encounters');
 assert.strictEqual(encC[0].name, 'Moray Eel', 'Sea C starts with Moray Eel');
 assert.strictEqual(encC[4].name, 'Anglerfish', 'Sea C finishes with Anglerfish');
 
-console.log('   ✓ Sea quests auto-tracking, Sea C start/finish rules, and completion verified.');
+// 9d. Verify Seas D, E, F, G explicit Fish 1 & Fish 5 slots
+const encD = buildEncounters('D');
+assert.strictEqual(encD[0].name, 'Lionfish', 'Sea D starts with Lionfish');
+assert.strictEqual(encD[4].name, 'Manta Ray', 'Sea D finishes with Manta Ray');
+
+const encE = buildEncounters('E');
+assert.strictEqual(encE[0].name, 'Electric Eel', 'Sea E starts with Electric Eel');
+assert.strictEqual(encE[4].name, 'Hydra', 'Sea E finishes with Hydra');
+
+const encF = buildEncounters('F');
+assert.strictEqual(encF[4].name, 'Theiving Squid', 'Sea F finishes with Theiving Squid');
+
+const encG = buildEncounters('G');
+assert.strictEqual(encG[4].name, 'Great White Shark', 'Sea G finishes with Great White Shark');
+
+console.log('   ✓ Sea quests auto-tracking and explicit fish slot rules (Fish 1..5) across all seas verified.');
 
 // Test 10: Final Fish Defeat & Victory Lap
 console.log('10. Testing final fish defeat and Victory Lap...');

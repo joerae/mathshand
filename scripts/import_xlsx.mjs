@@ -1,17 +1,21 @@
 /**
  * Spreadsheet → game data importer for Maths Handbuilder.
  *
- * The Excel workbook in /data is the SOURCE OF TRUTH for all game content.
+ * The Excel workbook is the SOURCE OF TRUTH for all game content.
+ * Can be fetched directly from published Google Docs or loaded from /data.
  * This script reads it and generates `data/game_data.js`, which the game imports.
  *
  * Usage:
- *   npm run import-data                      (uses the newest .xlsx in /data)
+ *   npm run import-data                      (fetches from Google Docs, fallbacks to /data)
+ *   npm run import-data -- --local           (forces reading local .xlsx in /data)
  *   node scripts/import_xlsx.mjs path/to.xlsx
  *
  * It runs automatically before `npm start` and `npm test`.
  */
 import fs from 'fs';
 import path from 'path';
+import http from 'http';
+import https from 'https';
 import { fileURLToPath } from 'url';
 import XLSX from 'xlsx';
 
@@ -19,15 +23,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
 const OUT_FILE = path.join(DATA_DIR, 'game_data.js');
+const DEFAULT_ONLINE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1v9LG4Esug4y0zR4MHevX5sjpp5UDjhjgZWRI4PsKsiLeaItr-VTQeB40qEE5EviOuF34fnRv7zwC/pub?output=xlsx';
 
 const warnings = [];
 const warn = (msg) => warnings.push(msg);
 
 // ---------------------------------------------------------------------------
-// Locate workbook
+// Locate or fetch workbook
 // ---------------------------------------------------------------------------
-function findWorkbook() {
-  if (process.argv[2]) return path.resolve(process.argv[2]);
+function findLocalWorkbook() {
   const candidates = fs.readdirSync(DATA_DIR)
     .filter(f => f.toLowerCase().endsWith('.xlsx') && !f.startsWith('~$'))
     .map(f => ({ f, t: fs.statSync(path.join(DATA_DIR, f)).mtimeMs }))
@@ -36,6 +40,80 @@ function findWorkbook() {
     throw new Error('No .xlsx workbook found in /data. Put the card content spreadsheet there.');
   }
   return path.join(DATA_DIR, candidates[0].f);
+}
+
+function fetchOnlineWorkbook(url, timeoutMs = 6000) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('http:') ? http : https;
+    const req = client.get(url, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return resolve(fetchOnlineWorkbook(res.headers.location, timeoutMs));
+      }
+      if (res.statusCode !== 200) {
+        return reject(new Error(`HTTP ${res.statusCode} from ${url}`));
+      }
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks)));
+      res.on('error', reject);
+    });
+    req.on('error', reject);
+    req.setTimeout(timeoutMs, () => {
+      req.destroy();
+      reject(new Error(`Timeout after ${timeoutMs}ms connecting to ${url}`));
+    });
+  });
+}
+
+async function loadWorkbook() {
+  const arg = process.argv[2];
+
+  // Explicit local file argument
+  if (arg && arg !== '--local' && arg !== '--remote' && !arg.startsWith('http')) {
+    const filePath = path.resolve(arg);
+    console.log(`Loading workbook from local argument: ${filePath}`);
+    return {
+      buffer: fs.readFileSync(filePath),
+      source: path.basename(filePath)
+    };
+  }
+
+  // Explicit --local flag
+  if (arg === '--local') {
+    const filePath = findLocalWorkbook();
+    console.log(`Loading workbook from local /data: ${path.basename(filePath)}`);
+    return {
+      buffer: fs.readFileSync(filePath),
+      source: path.basename(filePath)
+    };
+  }
+
+  // Fetch online from Google Docs by default (or passed URL)
+  const targetUrl = (arg && arg.startsWith('http')) ? arg : DEFAULT_ONLINE_URL;
+  try {
+    process.stdout.write(`Fetching latest spreadsheet from Google Docs... `);
+    const buffer = await fetchOnlineWorkbook(targetUrl, 5000);
+    console.log(`done (${Math.round(buffer.length / 1024)} KB).`);
+
+    // Sync a local copy to data/ so offline builds remain functional
+    try {
+      const localFile = path.join(DATA_DIR, 'Maths_Handbuilder_Card_Content_v6(1).xlsx');
+      fs.writeFileSync(localFile, buffer);
+    } catch (e) { /* ignore write issues */ }
+
+    return {
+      buffer,
+      source: 'Google Docs (online)'
+    };
+  } catch (err) {
+    console.log(`\n⚠ Could not reach Google Docs online (${err.message}).`);
+    console.log(`Falling back to local workbook in /data...`);
+    const filePath = findLocalWorkbook();
+    return {
+      buffer: fs.readFileSync(filePath),
+      source: path.basename(filePath)
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -219,8 +297,8 @@ function parseQuest(text, context, fishList = []) {
 // ---------------------------------------------------------------------------
 // Main import
 // ---------------------------------------------------------------------------
-function importWorkbook(file) {
-  const wb = XLSX.read(fs.readFileSync(file), { type: 'buffer' });
+function importWorkbook(buffer, sourceLabel) {
+  const wb = XLSX.read(buffer, { type: 'buffer' });
 
   // --- Fish ---
   const fish = readSheet(wb, 'Fish').filter(r => str(r['Card ID'])).map(r => {
@@ -243,36 +321,71 @@ function importWorkbook(file) {
   const seas = readSheet(wb, 'Seas').filter(r => str(r['Card ID'])).map(r => {
     const id = str(r['Card ID']);
     const letter = seaLetter(r['Unlock Sea']);
-    const rulesText = str(r['Encounter Selection Rules']);
+    const rulesText = str(r['Encounter Selection Rules'] || r['Encounter Selection Inspiration']);
     const fishCount = num(r['Fish per Adventure'], 5);
+
+    // Parse explicit columns: Fish 1 to Fish 5
+    // - "(none)" means no fish for this slot (e.g. Sea A has 4 encounters, Fish 5 is (none)).
+    // - empty/blank means use existing random selection rules for that slot.
+    const hasFishCols = [1, 2, 3, 4, 5].some(i => r[`Fish ${i}`] !== undefined);
+    const fishSlots = [];
+
+    if (hasFishCols) {
+      for (let i = 1; i <= 5; i++) {
+        const rawSlot = str(r[`Fish ${i}`]);
+        if (!rawSlot) {
+          fishSlots.push(null);
+        } else if (/^\(?(none|empty|-)\)?$/i.test(rawSlot)) {
+          // Explicitly no fish for this slot
+          continue;
+        } else {
+          const matched = fish.find(f => f.name.toLowerCase() === rawSlot.toLowerCase())
+            || findFishInText(rawSlot, fish);
+          if (matched) {
+            fishSlots.push(matched.id);
+          } else {
+            warn(`Sea ${letter}: Fish slot ${i} "${rawSlot}" could not be matched to any fish.`);
+            fishSlots.push(null);
+          }
+        }
+      }
+    }
 
     let startFishId = null;
     let finalFishId = null;
     let fixedFishIds = null;
+    let randomised = false;
 
-    // Check for fixed N encounters (e.g. "Fixed 4 encounters: Sea A cards 1-4 in order")
-    const fixedM = rulesText.match(/fixed (\d+) encounters?: sea ([a-g]) cards 1-(\d+) in order/i);
-    if (fixedM) {
-      const targetSea = fixedM[2].toUpperCase();
-      const count = parseInt(fixedM[3], 10);
-      fixedFishIds = fish.filter(f => f.sea === targetSea).slice(0, count).map(f => f.id);
+    if (hasFishCols && fishSlots.length > 0) {
+      startFishId = fishSlots[0] || null;
+      finalFishId = fishSlots[fishSlots.length - 1] || null;
+      fixedFishIds = fishSlots.every(f => f !== null) ? [...fishSlots] : null;
+      randomised = fishSlots.some(f => f === null);
+    } else {
+      // Legacy fallback for sheets without Fish 1-5 columns
+      const fixedM = rulesText.match(/fixed (\d+) encounters?: sea ([a-g]) cards 1-(\d+) in order/i);
+      if (fixedM) {
+        const targetSea = fixedM[2].toUpperCase();
+        const count = parseInt(fixedM[3], 10);
+        fixedFishIds = fish.filter(f => f.sea === targetSea).slice(0, count).map(f => f.id);
+      }
+
+      for (const sentence of rulesText.split(/[;.]/)) {
+        const s = sentence.trim();
+        if (!s) continue;
+        if (/start with|begins? with|first encounter/i.test(s)) {
+          const hit = findFishInText(s, fish);
+          if (hit) startFishId = hit.id;
+        }
+        if (/finish with|ends? with|final encounter/i.test(s)) {
+          const hit = findFishInText(s, fish);
+          if (hit) finalFishId = hit.id;
+        }
+      }
+      randomised = /random/i.test(rulesText) || SEA_ORDER.indexOf(letter) >= SEA_ORDER.indexOf('C');
     }
 
-    // Parse clauses for starting and finishing fish
-    for (const sentence of rulesText.split(/[;.]/)) {
-      const s = sentence.trim();
-      if (!s) continue;
-      if (/start with|begins? with|first encounter/i.test(s)) {
-        const hit = findFishInText(s, fish);
-        if (hit) startFishId = hit.id;
-      }
-      if (/finish with|ends? with|final encounter/i.test(s)) {
-        const hit = findFishInText(s, fish);
-        if (hit) finalFishId = hit.id;
-      }
-    }
-
-    const randomised = /random/i.test(rulesText) || SEA_ORDER.indexOf(letter) >= SEA_ORDER.indexOf('C');
+    const effectiveFishCount = fishSlots.length || fishCount;
 
     return {
       id,
@@ -281,8 +394,9 @@ function importWorkbook(file) {
       description: str(r['What you are doing']),
       mathsFocus: str(r['Maths Focus']),
       encounterRulesText: rulesText,
-      fishPerAdventure: fishCount,
+      fishPerAdventure: effectiveFishCount,
       randomised,
+      fishSlots: fishSlots.length ? fishSlots : null,
       startFishId,
       finalFishId,
       fixedFishIds,
@@ -368,7 +482,7 @@ function importWorkbook(file) {
   }
 
   return {
-    source: path.basename(file),
+    source: sourceLabel,
     importedAt: new Date().toISOString(),
     seaOrder: SEA_ORDER,
     config: { marketSize: 5 },
@@ -382,24 +496,33 @@ function importWorkbook(file) {
 }
 
 // ---------------------------------------------------------------------------
-const file = findWorkbook();
-const data = importWorkbook(file);
+// Main execution
+// ---------------------------------------------------------------------------
+async function main() {
+  const { buffer, source } = await loadWorkbook();
+  const data = importWorkbook(buffer, source);
 
-const banner = `/**
+  const banner = `/**
  * AUTO-GENERATED FILE — DO NOT EDIT BY HAND.
  *
- * Generated from: data/${data.source}
+ * Source: ${data.source}
  * Regenerate with: npm run import-data
  *
- * Edit the spreadsheet instead; it is the source of truth for all game content.
+ * Edit the spreadsheet or Google Doc; it is the source of truth for all game content.
  */
 `;
-fs.writeFileSync(OUT_FILE, `${banner}export const GAME_DATA = ${JSON.stringify(data, null, 2)};\n`, 'utf8');
+  fs.writeFileSync(OUT_FILE, `${banner}export const GAME_DATA = ${JSON.stringify(data, null, 2)};\n`, 'utf8');
 
-console.log(`Imported ${data.source} → data/game_data.js`);
-console.log(`  ${data.seas.length} seas, ${data.scooters.length} scooters, ${data.numberCards.length} number cards, ` +
-  `${data.fish.length} fish, ${data.treasures.length} treasures, ${Object.keys(data.quests).length} quest sets`);
-if (warnings.length) {
-  console.log(`\n⚠ ${warnings.length} warning(s):`);
-  for (const w of warnings) console.log(`  - ${w}`);
+  console.log(`Imported ${data.source} → data/game_data.js`);
+  console.log(`  ${data.seas.length} seas, ${data.scooters.length} scooters, ${data.numberCards.length} number cards, ` +
+    `${data.fish.length} fish, ${data.treasures.length} treasures, ${Object.keys(data.quests).length} quest sets`);
+  if (warnings.length) {
+    console.log(`\n⚠ ${warnings.length} warning(s):`);
+    for (const w of warnings) console.log(`  - ${w}`);
+  }
 }
+
+main().catch(err => {
+  console.error(`\n❌ Import failed:`, err.message);
+  process.exit(1);
+});
