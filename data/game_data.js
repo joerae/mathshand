@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Maths_Handbuilder_Card_Content_v6(1).xlsx",
-  "importedAt": "2026-11-01T23:49:22.139Z",
+  "importedAt": "2026-11-02T03:44:43.745Z",
   "seaOrder": [
     "A",
     "B",
@@ -244,15 +244,15 @@ export const GAME_DATA = {
       "startingHand": [
         {
           "op": "+",
-          "value": 1,
-          "label": "+1",
-          "target": 1
-        },
-        {
-          "op": "+",
           "value": 6,
           "label": "+6",
           "target": 6
+        },
+        {
+          "op": "+",
+          "value": 8,
+          "label": "+8",
+          "target": 8
         },
         {
           "op": "×",

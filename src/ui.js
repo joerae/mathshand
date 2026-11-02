@@ -261,6 +261,245 @@ export class GameUI {
     });
   }
 
+  // --- Visual Cause-and-Effect Animations ----------------------------------
+
+  /**
+   * Spawns a floating callout badge anchored to a DOM element (or rect) that
+   * rises and fades out.
+   */
+  spawnFloatingCallout(targetElOrRect, text, variant = 'info', offsetY = 0) {
+    if (!targetElOrRect) return;
+    const rect = typeof targetElOrRect.getBoundingClientRect === 'function'
+      ? targetElOrRect.getBoundingClientRect()
+      : targetElOrRect;
+    if (!rect || (rect.width === 0 && rect.height === 0)) return;
+
+    const pill = document.createElement('div');
+    pill.className = `fx-floating-callout fx-${variant}`;
+    pill.textContent = text;
+    pill.style.left = `${rect.left + rect.width / 2}px`;
+    pill.style.top = `${rect.top + rect.height * 0.35 + offsetY}px`;
+    document.body.appendChild(pill);
+
+    setTimeout(() => pill.remove(), 1350);
+  }
+
+  /**
+   * Temporarily applies a CSS animation class to an element and removes it when done.
+   */
+  triggerElementAnim(el, className, durationMs = 650) {
+    if (!el) return;
+    el.classList.remove(className);
+    // Force reflow so re-triggering the same animation works immediately
+    void el.offsetWidth;
+    el.classList.add(className);
+    setTimeout(() => el.classList.remove(className), durationMs);
+  }
+
+  /**
+   * Highlights the battery bolt that was just spent (and pulses the top battery pill).
+   */
+  animateBoltSpent(spentBoltIndex) {
+    const boltCards = this.batteryCardsRowEl?.querySelectorAll('.battery-card');
+    if (boltCards && boltCards[spentBoltIndex]) {
+      const boltEl = boltCards[spentBoltIndex];
+      this.triggerElementAnim(boltEl, 'anim-bolt-spent', 700);
+      this.spawnFloatingCallout(boltEl, '−1 ⚡', 'bolt', -10);
+    }
+    const batteryPill = document.querySelector('.battery-pill');
+    if (batteryPill) {
+      this.triggerElementAnim(batteryPill, 'anim-pill-flash-warn', 600);
+    }
+  }
+
+  /**
+   * Animates a card clone flying from a source bounding rect to a destination element.
+   */
+  animateCardFlight({ fromRect, toEl, cardHtml, cardClass, duration = 520, onArrive }) {
+    if (!fromRect || !toEl) {
+      if (onArrive) onArrive();
+      return;
+    }
+    const toRect = toEl.getBoundingClientRect();
+    if (toRect.width === 0 && toRect.height === 0) {
+      if (onArrive) onArrive();
+      return;
+    }
+
+    // Hide destination card until flight completes
+    const prevVisibility = toEl.style.visibility;
+    toEl.style.visibility = 'hidden';
+
+    const flyer = document.createElement('div');
+    flyer.className = `portrait-card ${cardClass} fx-flying-card`;
+    flyer.innerHTML = cardHtml;
+    flyer.style.left = `${fromRect.left}px`;
+    flyer.style.top = `${fromRect.top}px`;
+    flyer.style.width = `${fromRect.width}px`;
+    flyer.style.height = `${fromRect.height}px`;
+    document.body.appendChild(flyer);
+
+    const dx = (toRect.left + toRect.width / 2) - (fromRect.left + fromRect.width / 2);
+    const dy = (toRect.top + toRect.height / 2) - (fromRect.top + fromRect.height / 2);
+    const scaleX = toRect.width / Math.max(1, fromRect.width);
+    const scaleY = toRect.height / Math.max(1, fromRect.height);
+
+    if (typeof flyer.animate === 'function') {
+      const anim = flyer.animate([
+        { transform: 'translate(0px, 0px) scale(1) rotate(0deg)', boxShadow: '0 8px 20px rgba(0,0,0,0.22)' },
+        { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 28}px) scale(1.16) rotate(-4deg)`, boxShadow: '0 16px 32px rgba(0,0,0,0.32)', offset: 0.45 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY}) rotate(0deg)`, boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }
+      ], {
+        duration,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        fill: 'forwards'
+      });
+      anim.onfinish = () => {
+        flyer.remove();
+        toEl.style.visibility = prevVisibility;
+        this.triggerElementAnim(toEl, 'anim-card-arrived', 650);
+        if (onArrive) onArrive();
+      };
+    } else {
+      setTimeout(() => {
+        flyer.remove();
+        toEl.style.visibility = prevVisibility;
+        if (onArrive) onArrive();
+      }, duration);
+    }
+  }
+
+  /**
+   * Dramatic sequence when a fish is defeated:
+   * 1. Shows the defeated fish bursting on the encounter card before revealing the next fish
+   * 2. Pops the newly revealed Treasure card out of the defeated fish and flies it to the Stockpile
+   * 3. Pulses the recharged battery bolts and deals in any refilled market slots
+   */
+  animateFishDefeatSequence({ defeatedFish, total, revealedTreasure, recharged, refilledIndices }) {
+    const fishCardEl = this.fishCardEl;
+    if (!fishCardEl) return;
+
+    const fishRect = fishCardEl.getBoundingClientRect();
+
+    // 1. Defeated fish overlay right on top of the fish card
+    const overlay = document.createElement('div');
+    overlay.className = 'fx-fish-defeat-overlay';
+    overlay.innerHTML = `
+      <div class="fx-defeat-art">${fishArtFor(defeatedFish)}</div>
+      <div class="fx-defeat-burst">
+        <span class="fx-defeat-badge">⚔️ ${defeatedFish.name.toUpperCase()} DEFEATED! (🎯 ${total})</span>
+      </div>
+    `;
+    fishCardEl.appendChild(overlay);
+    this.triggerElementAnim(fishCardEl, 'anim-fish-defeat-impact', 900);
+    setTimeout(() => overlay.remove(), 880);
+
+    // 2. Treasure card emerging from the defeated fish and flying to the Treasure Stockpile
+    if (revealedTreasure && this.stockpileSlotsEl) {
+      const stockpileCards = this.stockpileSlotsEl.querySelectorAll('.stockpile-card');
+      const destCardEl = stockpileCards[stockpileCards.length - 1];
+      const wasStolen = !this.game.treasureStockpile.some(t => (t.uid || t.id) === (revealedTreasure.uid || revealedTreasure.id));
+
+      if (destCardEl && !wasStolen) {
+        const destRect = destCardEl.getBoundingClientRect();
+        destCardEl.style.visibility = 'hidden';
+
+        const flyer = document.createElement('div');
+        flyer.className = 'portrait-card stockpile-card treasure-card fx-flying-card fx-treasure-drop';
+        flyer.innerHTML = `
+          <div class="fx-drop-banner">💎 TREASURE!</div>
+          <div class="card-corner-top">💎 ${revealedTreasure.gems}</div>
+          <div class="card-center-gems">${revealedTreasure.label}</div>
+          <div class="treasure-name">${revealedTreasure.name}</div>
+          <div class="card-target-bottom">🎯 ${revealedTreasure.target}</div>
+        `;
+
+        const cardW = 86;
+        const cardH = 122;
+        const startLeft = fishRect.left + fishRect.width / 2 - cardW / 2;
+        const startTop = fishRect.top + fishRect.height / 2 - cardH / 2;
+
+        flyer.style.left = `${startLeft}px`;
+        flyer.style.top = `${startTop}px`;
+        flyer.style.width = `${cardW}px`;
+        flyer.style.height = `${cardH}px`;
+        document.body.appendChild(flyer);
+
+        const dx = (destRect.left + destRect.width / 2) - (startLeft + cardW / 2);
+        const dy = (destRect.top + destRect.height / 2) - (startTop + cardH / 2);
+
+        if (typeof flyer.animate === 'function') {
+          const anim = flyer.animate([
+            { transform: 'translate(0px, 12px) scale(0.25) rotate(-12deg)', opacity: 0 },
+            { transform: 'translate(0px, -22px) scale(1.22) rotate(4deg)', opacity: 1, offset: 0.28 },
+            { transform: 'translate(0px, -26px) scale(1.18) rotate(0deg)', opacity: 1, offset: 0.52 },
+            { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)', opacity: 1` }
+          ], {
+            duration: 1050,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            fill: 'forwards'
+          });
+
+          // Fix keyframe syntax by passing clean objects:
+          anim.cancel();
+          const cleanAnim = flyer.animate([
+            { transform: 'translate(0px, 12px) scale(0.25) rotate(-12deg)', opacity: 0 },
+            { transform: 'translate(0px, -22px) scale(1.22) rotate(4deg)', opacity: 1, offset: 0.28 },
+            { transform: 'translate(0px, -26px) scale(1.18) rotate(0deg)', opacity: 1, offset: 0.52 },
+            { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)`, opacity: 1 }
+          ], {
+            duration: 1050,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            fill: 'forwards'
+          });
+
+          cleanAnim.onfinish = () => {
+            flyer.remove();
+            destCardEl.style.visibility = '';
+            this.triggerElementAnim(destCardEl, 'anim-treasure-landed', 750);
+            this.spawnFloatingCallout(destCardEl, `💎 ${revealedTreasure.name}!`, 'treasure', -12);
+          };
+        } else {
+          setTimeout(() => {
+            flyer.remove();
+            destCardEl.style.visibility = '';
+          }, 1050);
+        }
+      } else if (wasStolen) {
+        this.spawnFloatingCallout(fishCardEl, `🦑 ${this.game.currentMonster?.name} stole the treasure!`, 'miss', -20);
+      }
+    }
+
+    // 3. Battery recharge pulse
+    if (recharged && this.batteryCardsRowEl) {
+      const boltCards = this.batteryCardsRowEl.querySelectorAll('.battery-card.charged');
+      boltCards.forEach((cardEl, idx) => {
+        cardEl.style.animationDelay = `${idx * 65}ms`;
+        this.triggerElementAnim(cardEl, 'anim-battery-recharge', 800);
+        setTimeout(() => { cardEl.style.animationDelay = ''; }, 850);
+      });
+      this.spawnFloatingCallout(this.batteryCardsRowEl, '⚡ BATTERY RECHARGED!', 'success', -8);
+    } else if (!recharged && this.batteryCardsRowEl) {
+      this.spawnFloatingCallout(this.batteryCardsRowEl, '🪼 No Recharge!', 'miss', -8);
+    }
+
+    // 4. Market slots refilled animation
+    if (refilledIndices && refilledIndices.length > 0 && this.marketSlotsEl) {
+      const slots = this.marketSlotsEl.children;
+      refilledIndices.forEach((slotIdx, i) => {
+        const slotEl = slots[slotIdx];
+        if (slotEl) {
+          slotEl.style.animationDelay = `${i * 70}ms`;
+          this.triggerElementAnim(slotEl, 'anim-card-deal', 650);
+          setTimeout(() => { slotEl.style.animationDelay = ''; }, 700);
+        }
+      });
+      this.spawnFloatingCallout(this.marketSlotsEl, `🔄 +${refilledIndices.length} Market Refilled`, 'info', -10);
+    }
+  }
+
+  // --- Selection & Actions -------------------------------------------------
+
   clearSelection() {
     this.selectedSequence = [];
     this.render();
@@ -273,24 +512,56 @@ export class GameUI {
 
     // Fish ability: choose cards to discard
     if (this.game.pendingDiscard) {
-      this.game.discardFromHand(cardId);
+      const res = this.game.discardFromHand(cardId);
       this.selectedSequence = this.selectedSequence.filter(c => (c.uid || c.id) !== cardId);
       this.render();
+      if (res.success && this.handNumberCardsEl) {
+        this.spawnFloatingCallout(this.handNumberCardsEl, `🗑️ Discarded ${res.card.label}`, 'miss', -10);
+      }
       return;
     }
 
     // If a card purchase is pending replacement at capacity, clicking replaces it!
     if (this.game.pendingPurchase) {
-      const targetLabel = this.game.pendingPurchase.card.label;
+      const pendingMarketIdx = this.game.pendingPurchase.targetIndex;
+      const pendingCard = this.game.pendingPurchase.card;
+      const marketSlotEl = this.marketSlotsEl?.children[pendingMarketIdx];
+      const fromRect = marketSlotEl ? marketSlotEl.getBoundingClientRect() : null;
+
       const repRes = this.game.replaceAndAcquire(cardId);
       if (repRes.success) {
         this.lastActionFeedback = {
           type: 'success',
-          text: `🔄 Replaced ${repRes.replacedCard.label} with ${targetLabel}!`
+          text: `🔄 Replaced ${repRes.replacedCard.label} with ${pendingCard.label}!`
         };
-        this.clearSelection();
+        this.selectedSequence = [];
+        this.render();
+
+        const handCards = this.handNumberCardsEl?.querySelectorAll('.number-card');
+        const newHandCardEl = handCards?.[handCards.length - 1];
+        if (fromRect && newHandCardEl) {
+          this.animateCardFlight({
+            fromRect,
+            toEl: newHandCardEl,
+            cardClass: `game-card number-card ${opClass(pendingCard)}`,
+            cardHtml: `
+              <div class="card-corner-top">${pendingCard.label}</div>
+              <div class="card-center-val">${pendingCard.label}</div>
+              <div class="card-target-bottom">🎯 ${pendingCard.target}</div>
+            `
+          });
+        }
+        if (this.handNumberCardsEl) {
+          this.spawnFloatingCallout(
+            this.handNumberCardsEl,
+            `🔄 ${repRes.replacedCard.label} → ${pendingCard.label}`,
+            'success',
+            -12
+          );
+        }
+      } else {
+        this.render();
       }
-      this.render();
       return;
     }
 
@@ -312,7 +583,10 @@ export class GameUI {
    */
   handleAttack() {
     if (this.game.status !== 'in_progress') return;
-    if (this.game.isBlocked) return;
+    if (this.game.isBlocked) {
+      this.spawnFloatingCallout(this.handNumberCardsEl, '⏳ Choose a card in your hand first!', 'miss', -10);
+      return;
+    }
 
     const fish = this.game.currentMonster;
     const fishName = fish?.name || 'Sea Creature';
@@ -337,7 +611,39 @@ export class GameUI {
         };
       }
     }
+
     this.render();
+
+    if (!res.success) return;
+
+    if (res.targetMatched && res.defeated) {
+      this.animateFishDefeatSequence({
+        defeatedFish: res.defeatedFish || fish,
+        total: res.total,
+        revealedTreasure: res.revealedTreasure,
+        recharged: res.recharged,
+        refilledIndices: res.refilledIndices
+      });
+    } else if (res.targetMatched && !res.defeated) {
+      // Multi-target fish hit (e.g. Hydra)
+      this.triggerElementAnim(this.fishCardEl, 'anim-fish-hit', 650);
+      this.spawnFloatingCallout(this.fishCardEl, `⚔️ HIT 🎯 ${res.total}!`, 'success', -15);
+      if (!res.finalAttack) {
+        this.animateBoltSpent(this.game.currentBolts);
+      }
+    } else {
+      // Missed attack
+      this.triggerElementAnim(this.fishCardEl, 'anim-shake-miss', 600);
+      this.spawnFloatingCallout(
+        this.fishCardEl,
+        `❌ Got ${res.total}, needed 🎯 ${needed}`,
+        'miss',
+        -10
+      );
+      if (!res.finalAttack) {
+        this.animateBoltSpent(this.game.currentBolts);
+      }
+    }
   }
 
   /**
@@ -346,7 +652,14 @@ export class GameUI {
    */
   handleBuy(type, index) {
     if (this.game.status !== 'in_progress' && this.game.status !== 'post_game') return;
-    if (this.game.isBlocked) return;
+    if (this.game.isBlocked) {
+      this.spawnFloatingCallout(this.handNumberCardsEl, '⏳ Choose a card in your hand first!', 'miss', -10);
+      return;
+    }
+
+    const containerEl = type === 'stockpile' ? this.stockpileSlotsEl : this.marketSlotsEl;
+    const clickedSlotEl = containerEl?.children[index];
+    const fromRect = clickedSlotEl ? clickedSlotEl.getBoundingClientRect() : null;
 
     if (this.game.isFinalAttack && this.game.status === 'in_progress') {
       this.lastActionFeedback = {
@@ -354,6 +667,9 @@ export class GameUI {
         text: '⚡ Out of battery! Only Final Attack is available — tap the sea creature!'
       };
       this.render();
+      const postSlotEl = (type === 'stockpile' ? this.stockpileSlotsEl : this.marketSlotsEl)?.children[index];
+      this.triggerElementAnim(postSlotEl, 'anim-shake-miss', 550);
+      this.spawnFloatingCallout(fromRect, '⚡ 0 Bolts! Tap Fish for Final Attack', 'miss', -10);
       return;
     }
 
@@ -363,6 +679,7 @@ export class GameUI {
         text: '🏆 Market is closed during the Victory Lap. Tap a stockpile treasure to claim it!'
       };
       this.render();
+      this.spawnFloatingCallout(fromRect, '🏆 Market Closed in Victory Lap', 'info', -10);
       return;
     }
 
@@ -399,7 +716,68 @@ export class GameUI {
         };
       }
     }
+
     this.render();
+
+    if (!res.success) return;
+
+    // Spend bolt animation for every buy/claim attempt
+    this.animateBoltSpent(this.game.currentBolts);
+
+    if (res.targetMatched) {
+      if (type === 'stockpile') {
+        // Fly claimed treasure card from Stockpile to Treasure Chest
+        this.spawnFloatingCallout(fromRect, `💎 +${targetCard.gems} GEMS!`, 'treasure', -14);
+        const chestItems = this.treasureCollectedListEl?.querySelectorAll('.treasure-chest-item');
+        const newChestItemEl = chestItems?.[chestItems.length - 1];
+        if (fromRect && newChestItemEl) {
+          this.animateCardFlight({
+            fromRect,
+            toEl: newChestItemEl,
+            cardClass: 'treasure-card',
+            cardHtml: `
+              <div class="card-corner-top">💎 ${targetCard.gems}</div>
+              <div class="card-center-gems">${targetCard.label}</div>
+              <div class="card-target-bottom">🎯 ${targetCard.target}</div>
+            `
+          });
+        }
+        const treasurePill = document.querySelector('.treasure-pill');
+        if (treasurePill) this.triggerElementAnim(treasurePill, 'anim-pill-flash-gold', 700);
+      } else if (res.needsReplacement) {
+        const postSlotEl = this.marketSlotsEl?.children[index];
+        this.triggerElementAnim(postSlotEl, 'anim-card-arrived', 650);
+        this.spawnFloatingCallout(fromRect, `🛒 Matched ${targetCard.label}! Pick a card to scrap`, 'info', -14);
+      } else {
+        // Fly bought market card from Market slot into Player's Hand
+        this.spawnFloatingCallout(fromRect, `🛒 Bought ${targetCard.label}!`, 'success', -14);
+        const handCards = this.handNumberCardsEl?.querySelectorAll('.number-card');
+        const newHandCardEl = handCards?.[handCards.length - 1];
+        if (fromRect && newHandCardEl) {
+          this.animateCardFlight({
+            fromRect,
+            toEl: newHandCardEl,
+            cardClass: `game-card number-card ${opClass(targetCard)}`,
+            cardHtml: `
+              <div class="card-corner-top">${targetCard.label}</div>
+              <div class="card-center-val">${targetCard.label}</div>
+              <div class="card-target-bottom">🎯 ${targetCard.target}</div>
+            `
+          });
+        }
+      }
+    } else {
+      // Mismatch: shake the tapped card and show floating mismatch callout
+      const postContainer = type === 'stockpile' ? this.stockpileSlotsEl : this.marketSlotsEl;
+      const postSlotEl = postContainer?.children[index];
+      this.triggerElementAnim(postSlotEl, 'anim-shake-miss', 600);
+      this.spawnFloatingCallout(
+        fromRect,
+        `❌ Got ${res.total}, needed 🎯 ${targetCard.target}`,
+        'miss',
+        -12
+      );
+    }
   }
 
   handleMarketRefresh() {
@@ -423,6 +801,18 @@ export class GameUI {
       };
     }
     this.render();
+
+    if (res.success) {
+      this.animateBoltSpent(this.game.currentBolts);
+      if (this.marketSlotsEl) {
+        Array.from(this.marketSlotsEl.children).forEach((slotEl, idx) => {
+          slotEl.style.animationDelay = `${idx * 55}ms`;
+          this.triggerElementAnim(slotEl, 'anim-card-deal', 600);
+          setTimeout(() => { slotEl.style.animationDelay = ''; }, 650);
+        });
+        this.spawnFloatingCallout(this.marketSlotsEl, '🔄 5 New Market Cards!', 'info', -12);
+      }
+    }
   }
 
   render() {
@@ -553,12 +943,17 @@ export class GameUI {
           slotEl.style.opacity = '0.45';
           slotEl.style.cursor = 'not-allowed';
         }
+        if (isReplacing && g.pendingPurchase?.targetIndex === idx) {
+          slotEl.classList.add('selected');
+        }
 
         const isMatched = this.showCalculator && (this.selectedSequence.length > 0 && calc.total === card.target);
         if (isMatched && !isFinalAttack && !isPostGame) slotEl.classList.add('matched');
 
         let matchBadge = '';
-        if (isMatched && !isFinalAttack && !isPostGame) {
+        if (isReplacing && g.pendingPurchase?.targetIndex === idx) {
+          matchBadge = `<div class="card-match-indicator">🛒 BUYING...</div>`;
+        } else if (isMatched && !isFinalAttack && !isPostGame) {
           matchBadge = `<div class="card-match-indicator">✨ MATCH! (Tap to Buy)</div>`;
         }
 

@@ -85,6 +85,7 @@ export class GameState {
 
     // Market
     this.market = [];
+    this.lastRefilledIndices = [];
     this.initMarket();
 
     this.status = 'in_progress';
@@ -210,10 +211,15 @@ export class GameState {
 
   refillEmptyMarketSlots() {
     let refilled = 0;
+    this.lastRefilledIndices = [];
     for (let i = 0; i < GAME_CONFIG.marketSize; i++) {
       if (!this.market[i]) {
         const card = this.drawCardFromDeck();
-        if (card) { this.market[i] = card; refilled++; }
+        if (card) {
+          this.market[i] = card;
+          this.lastRefilledIndices.push(i);
+          refilled++;
+        }
       }
     }
     return refilled;
@@ -329,8 +335,16 @@ export class GameState {
     }
 
     this.addLog(`⚔️ ${wasFinalAttack ? 'FINAL ATTACK SUCCESS' : 'ATTACK SUCCESS'}: [${summary}] = ${total}. Defeated ${fish.name}!`, 'success');
-    this.handleFishDefeat(isFinalFish, fish);
-    return { success: true, targetMatched: true, defeated: true, finalAttack: wasFinalAttack, total };
+    const defeatInfo = this.handleFishDefeat(isFinalFish, fish);
+    return {
+      success: true,
+      targetMatched: true,
+      defeated: true,
+      finalAttack: wasFinalAttack,
+      total,
+      defeatedFish: fish,
+      ...defeatInfo
+    };
   }
 
   /**
@@ -338,6 +352,7 @@ export class GameState {
    * treasure, then advance (or start the Victory Lap after the final fish).
    */
   handleFishDefeat(isFinalFish, fish) {
+    const recharged = !fish.abilities?.noRecharge;
     if (fish.abilities?.noRecharge) {
       this.addLog(`🪼 ${fish.name}: no battery recharge for this defeat! (${this.currentBolts}/${this.maxBolts} ⚡)`, 'warning');
     } else {
@@ -345,7 +360,8 @@ export class GameState {
     }
 
     const slotsRefilled = this.refillEmptyMarketSlots();
-    this.revealTreasureToStockpile();
+    const refilledIndices = (this.lastRefilledIndices || []).slice();
+    const revealedTreasure = this.revealTreasureToStockpile();
 
     if (isFinalFish) {
       this.sharkDefeated = true;
@@ -354,7 +370,7 @@ export class GameState {
       this.emitQuestEvent({ type: 'adventure_complete' });
       this.addLog(`🏆 ${fish.name.toUpperCase()} DEFEATED — Sea ${this.sea.letter} complete! Victory Lap with ${this.currentBolts}/${this.maxBolts} ⚡.`, 'victory');
       if (this.currentBolts === 0 || this.treasureStockpile.length === 0) this.finishVictoryLap();
-      return;
+      return { recharged, slotsRefilled, refilledIndices, revealedTreasure };
     }
 
     this.currentMonsterIndex++;
@@ -362,6 +378,7 @@ export class GameState {
     this.addLog(`⚡ Battery ${this.currentBolts}/${this.maxBolts}, refilled ${slotsRefilled} market slots. Next: ${next.name} (🎯 ${next.targets.join(' & ')})!`, 'success');
     this.onFishEncountered();
     this.checkFinalAttackTrigger();
+    return { recharged, slotsRefilled, refilledIndices, revealedTreasure };
   }
 
   finishVictoryLap() {
@@ -458,7 +475,7 @@ export class GameState {
     this.addLog(`🔄 CARD REPLACED: Removed ${replaced.label}, added ${targetCard.label} (${this.hand.length}/${this.maxHandCapacity}).`, 'success');
     this.emitQuestEvent({ type: 'market_bought', card: targetCard, cards: cards || [] });
     this.checkFinalAttackTrigger();
-    return { success: true, acquiredCard: targetCard, replacedCard: replaced };
+    return { success: true, acquiredCard: targetCard, replacedCard: replaced, targetIndex };
   }
 
   /** ACTION 3: Refresh all market cards. Costs 1 bolt. */
