@@ -2540,8 +2540,46 @@ body {
 }
 
 /* ==========================================================================
-   Hand Card Slots with Dotted Outlines
+   Hand Card Slots with Dotted Outlines & In-Workbench Dimmed Cards
    ========================================================================== */
+
+/* Cards in hand currently placed on the Calculation Workbench (dimmed in place) */
+.portrait-card.hand-card-in-use {
+  opacity: 0.38;
+  filter: saturate(60%);
+  border-style: dashed !important;
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.portrait-card.hand-card-in-use:hover {
+  opacity: 0.82;
+  filter: saturate(95%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.portrait-card .card-bench-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.45);
+  border: 1.5px solid #ffffff;
+  z-index: 5;
+  pointer-events: none;
+}
 
 .portrait-card.hand-slot-empty {
   background: rgba(248, 250, 252, 0.65);

@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Google Docs (online)",
-  "importedAt": "2026-11-02T23:04:04.922Z",
+  "importedAt": "2026-11-02T23:38:51.921Z",
   "seaOrder": [
     "A",
     "B",
@@ -35,15 +35,15 @@ export const GAME_DATA = {
         "A_Fish",
         "A_Fish_2",
         "A_Fish_3",
-        "A_Fish_2"
+        "A_Fish_4"
       ],
       "startFishId": "A_Fish",
-      "finalFishId": "A_Fish_2",
+      "finalFishId": "A_Fish_4",
       "fixedFishIds": [
         "A_Fish",
         "A_Fish_2",
         "A_Fish_3",
-        "A_Fish_2"
+        "A_Fish_4"
       ],
       "newNumberCardsText": "+1,+2,+3,+4,+5,+6,+7,+8,+9"
     },
@@ -328,6 +328,12 @@ export const GAME_DATA = {
         },
         {
           "op": "×",
+          "value": 2,
+          "label": "×2",
+          "target": 2
+        },
+        {
+          "op": "×",
           "value": 10,
           "label": "×10",
           "target": 10
@@ -354,9 +360,9 @@ export const GAME_DATA = {
         },
         {
           "op": "+",
-          "value": 3,
-          "label": "+3",
-          "target": 3
+          "value": 2,
+          "label": "+2",
+          "target": 2
         },
         {
           "op": "×",
@@ -403,10 +409,10 @@ export const GAME_DATA = {
           "target": 6
         },
         {
-          "op": "+",
-          "value": 8,
-          "label": "+8",
-          "target": 8
+          "op": "-",
+          "value": 1,
+          "label": "−1",
+          "target": 1
         },
         {
           "op": "-",
@@ -1165,7 +1171,7 @@ export const GAME_DATA = {
       "sea": "B",
       "name": "Lost Compass",
       "copies": 1,
-      "target": 32,
+      "target": 33,
       "gems": 2,
       "specialRule": "",
       "status": ""

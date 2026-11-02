@@ -339,4 +339,55 @@ for (const seaLetter of SEA_ORDER) {
 }
 console.log('   ✓ Scooter vector art (7/7) and empty slot capacities verified.');
 
-console.log('\n✅ ALL 11 v0.10 SEVEN SEAS INTEGRATION TESTS PASSED SUCCESSFULLY!');
+// Test 12: Hand Card Sorting Order (+ then - then ×) & Acquisition Refresh
+console.log('12. Testing hand card sorting order (+ then - then ×) & acquisition refresh...');
+const sortGame = new GameState({ sea: 'C' });
+// Manually add mixed cards in arbitrary order
+sortGame.hand = [
+  { uid: 's1', op: '×', value: 3, label: '×3', target: 3 },
+  { uid: 's2', op: '+', value: 6, label: '+6', target: 6 },
+  { uid: 's3', op: '-', value: 10, label: '−10', target: 10 },
+  { uid: 's4', op: '+', value: 1, label: '+1', target: 1 },
+  { uid: 's5', op: '×', value: 5, label: '×5', target: 5 },
+  { uid: 's6', op: '-', value: 3, label: '−3', target: 3 },
+  { uid: 's7', op: '+', value: 3, label: '+3', target: 3 },
+  { uid: 's8', op: '×', value: 4, label: '×4', target: 4 }
+];
+sortGame.sortHand();
+
+const sortedLabels = sortGame.hand.map(c => c.label);
+assert.deepStrictEqual(
+  sortedLabels,
+  ['+1', '+3', '+6', '−3', '−10', '×3', '×4', '×5'],
+  'Hand must strictly sort: + first (ascending), then - (ascending), then × (ascending)'
+);
+
+// Verify that buying a card refreshes the sort order properly
+sortGame.hand = [
+  { uid: 'c_plus2', op: '+', value: 2, label: '+2', target: 2 },
+  { uid: 'c_sub5', op: '-', value: 5, label: '−5', target: 5 },
+  { uid: 'c_mul4', op: '×', value: 4, label: '×4', target: 4 }
+];
+sortGame.maxHandCapacity = 8;
+sortGame.currentBolts = 3;
+sortGame.market = [{ uid: 'm_new', id: 'M_NEW', type: 'number', op: '+', value: 1, label: '+1', target: 1 }];
+
+// Formula totaling 1 to buy the market card
+const buyFormula = [{ uid: 'bench_c1', op: '+', value: 1, label: '+1', target: 1 }];
+const buySortRes = sortGame.playBuy('market', 0, buyFormula);
+assert.strictEqual(buySortRes.success, true);
+assert.strictEqual(buySortRes.targetMatched, true);
+assert.deepStrictEqual(
+  sortGame.hand.map(c => c.label),
+  ['+1', '+2', '−5', '×4'],
+  'Newly acquired card must be automatically sorted into proper position (+ then - then ×)'
+);
+assert.strictEqual(buySortRes.success, true);
+assert.deepStrictEqual(
+  sortGame.hand.map(c => c.label),
+  ['+1', '+2', '−5', '×4'],
+  'Newly acquired card must be automatically sorted into proper position'
+);
+console.log('   ✓ Hand sorting (+ then - then ×) and acquisition refresh verified.');
+
+console.log('\n✅ ALL 12 v0.10 SEVEN SEAS INTEGRATION TESTS PASSED SUCCESSFULLY!');

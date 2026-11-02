@@ -74,6 +74,7 @@ export class GameState {
 
     // Hand
     this.hand = buildStartingHand(this.scooter);
+    this.sortHand();
     this.removedCards = [];
 
     // Pending choices
@@ -132,6 +133,29 @@ export class GameState {
 
   spendBolt() {
     this.currentBolts = Math.max(0, this.currentBolts - 1);
+  }
+
+  /**
+   * Sort cards in hand by operator: '+' then '-' then '×', then ascending by value.
+   * Hand order only refreshes when cards enter the hand (start, market purchase, replace, debug).
+   * While tapping to chain calculations, card order remains completely stable.
+   */
+  sortHand() {
+    const opOrder = (op) => {
+      if (op === '+') return 1;
+      if (op === '-' || op === '−') return 2;
+      if (op === '×' || op === 'x' || op === 'X' || op === '*') return 3;
+      return 4;
+    };
+    this.hand.sort((a, b) => {
+      const orderA = opOrder(a.op);
+      const orderB = opOrder(b.op);
+      if (orderA !== orderB) return orderA - orderB;
+      const valA = Math.abs(a.value ?? a.target ?? 0);
+      const valB = Math.abs(b.value ?? b.target ?? 0);
+      if (valA !== valB) return valA - valB;
+      return (a.id || '').localeCompare(b.id || '');
+    });
   }
 
   // --- Persistent gems -------------------------------------------------------
@@ -455,6 +479,7 @@ export class GameState {
           const [replaced] = this.hand.splice(idx, 1);
           this.removedCards.push(replaced);
           this.hand.push(targetCard);
+          this.sortHand();
           this.market[targetIndex] = null;
           this.addLog(`🛒 BUY SUCCESS: [${summary}] = ${total}. Replaced ${replaced.label} with ${targetCard.label}.`, 'success');
           this.emitQuestEvent({ type: 'market_bought', card: targetCard, cards: selectedNumberCards });
@@ -469,6 +494,7 @@ export class GameState {
 
     this.market[targetIndex] = null;
     this.hand.push(targetCard);
+    this.sortHand();
     this.addLog(`🛒 BUY SUCCESS: [${summary}] = ${total}. Acquired ${targetCard.label} (${this.hand.length}/${this.maxHandCapacity}). (Battery: ${this.currentBolts}/${this.maxBolts} ⚡)`, 'success');
     this.emitQuestEvent({ type: 'market_bought', card: targetCard, cards: selectedNumberCards });
     this.checkFinalAttackTrigger();
@@ -493,6 +519,7 @@ export class GameState {
     const [replaced] = this.hand.splice(idx, 1);
     this.removedCards.push(replaced);
     this.hand.push(targetCard);
+    this.sortHand();
     this.market[targetIndex] = null;
     this.pendingPurchase = null;
 
@@ -565,6 +592,7 @@ export class GameState {
       target: Math.abs(v)
     };
     this.hand.push(card);
+    this.sortHand();
     this.addLog(`[Debug] Added ${card.label} to hand (${this.hand.length}/${this.maxHandCapacity}).`, 'system');
   }
 

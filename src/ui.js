@@ -540,7 +540,8 @@ export class GameUI {
         this.render();
 
         const handCards = this.handNumberCardsEl?.querySelectorAll('.number-card');
-        const newHandCardEl = handCards?.[handCards.length - 1];
+        const cardTargetUid = pendingCard.uid || pendingCard.id;
+        const newHandCardEl = this.handNumberCardsEl?.querySelector(`[data-uid="${cardTargetUid}"]`) || handCards?.[handCards.length - 1];
         if (fromRect && newHandCardEl) {
           this.animateCardFlight({
             fromRect,
@@ -761,7 +762,8 @@ export class GameUI {
         // Fly bought market card from Market slot into Player's Hand
         this.spawnFloatingCallout(fromRect, `🛒 Bought ${targetCard.label}!`, 'success', -14);
         const handCards = this.handNumberCardsEl?.querySelectorAll('.number-card');
-        const newHandCardEl = handCards?.[handCards.length - 1];
+        const cardTargetUid = targetCard.uid || targetCard.id;
+        const newHandCardEl = this.handNumberCardsEl?.querySelector(`[data-uid="${cardTargetUid}"]`) || handCards?.[handCards.length - 1];
         if (fromRect && newHandCardEl) {
           this.animateCardFlight({
             fromRect,
@@ -1147,37 +1149,52 @@ export class GameUI {
       }
     }
 
-    const selectedIds = new Set(this.selectedSequence.map(c => c.uid || c.id));
-    const cardsInHand = isBlocked
-      ? g.hand // When replacing/discarding, show all cards in hand
-      : g.hand.filter(c => !selectedIds.has(c.uid || c.id));
+    // Map cards on workbench to their 1-based order index
+    const selectedPositionMap = new Map();
+    this.selectedSequence.forEach((c, idx) => {
+      selectedPositionMap.set(c.uid || c.id, idx + 1);
+    });
 
     this.handNumberCardsEl.innerHTML = '';
 
-    if (cardsInHand.length === 0 && !isBlocked) {
+    if (g.hand.length === 0) {
       const hintEl = document.createElement('div');
       hintEl.className = 'empty-hand-hint';
       hintEl.style.width = '100%';
-      hintEl.textContent = 'All cards from your hand are on the Calculation Workbench. Click any card on the workbench to return it to your hand.';
+      hintEl.textContent = 'Your hand is empty. Buy cards from the Market to build your hand!';
       this.handNumberCardsEl.appendChild(hintEl);
     }
 
-    cardsInHand.forEach(c => {
+    g.hand.forEach(c => {
+      const cardId = c.uid || c.id;
+      const onWorkbenchIndex = !isBlocked ? selectedPositionMap.get(cardId) : undefined;
+      const isOnWorkbench = onWorkbenchIndex !== undefined;
+
       const cardEl = document.createElement('div');
       cardEl.className = `portrait-card game-card number-card ${opClass(c)}`;
+      cardEl.dataset.uid = cardId;
+
+      if (isOnWorkbench) {
+        cardEl.classList.add('hand-card-in-use');
+      }
+
       if (isDiscarding) {
         cardEl.classList.add('selectable-for-replacement');
         cardEl.title = `Click to PERMANENTLY DISCARD ${c.label} (${g.pendingDiscard.source} defeat effect)`;
       } else if (isReplacing) {
         cardEl.classList.add('selectable-for-replacement');
         cardEl.title = `Click to PERMANENTLY REMOVE ${c.label} and add ${g.pendingPurchase.card.label}`;
+      } else if (isOnWorkbench) {
+        cardEl.title = `Click to return ${c.label} to hand (Workbench #${onWorkbenchIndex})`;
       } else {
         cardEl.title = 'Click to place this card onto the Calculation Workbench';
       }
 
       const replaceTag = isBlocked ? `<div class="card-match-indicator" style="background:#d97706;">${isDiscarding ? 'DISCARD' : 'SCRAP'}</div>` : '';
+      const benchBadge = isOnWorkbench ? `<div class="card-bench-badge" title="Workbench #${onWorkbenchIndex}">#${onWorkbenchIndex}</div>` : '';
 
       cardEl.innerHTML = `
+        ${benchBadge}
         <div class="card-corner-top">${c.label}</div>
         <div class="card-center-val">${c.label}</div>
         <div class="card-target-bottom">🎯 ${c.target}</div>
@@ -1187,8 +1204,8 @@ export class GameUI {
       this.handNumberCardsEl.appendChild(cardEl);
     });
 
-    // Render dotted outlines for available scooter card slots
-    const occupiedSlots = cardsInHand.length;
+    // Render dotted outlines for available scooter card slots (fixed at the end of hand capacity)
+    const occupiedSlots = g.hand.length;
     const totalSlots = g.maxHandCapacity || 8;
     for (let slotIdx = occupiedSlots + 1; slotIdx <= totalSlots; slotIdx++) {
       const slotEl = document.createElement('div');
