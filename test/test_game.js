@@ -11,6 +11,7 @@
  */
 import assert from 'node:assert';
 import { GameState } from '../src/game.js';
+import { scooterArtFor, SCOOTER_ART } from '../src/scooter_art.js';
 import {
   GAME_DATA, SEA_ORDER, getSea, getScooter, scootersForSea,
   defaultScooterForSea, buildStartingHand, buildDrawPile,
@@ -308,4 +309,22 @@ assert.strictEqual(claimRes.success, true);
 assert.strictEqual(victoryGame.status, 'won', 'Concludes adventure after claiming all treasures');
 console.log('   ✓ Victory Lap treasure claiming and quest payout verified.');
 
-console.log('\n✅ ALL 10 v0.10 SEVEN SEAS INTEGRATION TESTS PASSED SUCCESSFULLY!');
+// Test 11: Scooter Artwork and Hand Slot Capacity Verification
+console.log('11. Testing scooter artwork and hand slot capacity...');
+for (const seaLetter of SEA_ORDER) {
+  const sc = defaultScooterForSea(seaLetter);
+  assert.ok(sc, `Scooter must exist for Sea ${seaLetter}`);
+  assert.ok(sc.handCapacity >= 7 && sc.handCapacity <= 10, `Hand capacity must be realistic (7-10): got ${sc.handCapacity}`);
+  assert.ok(sc.startingHand.length <= sc.handCapacity, 'Starting hand cannot exceed scooter capacity');
+  
+  const availableSlots = sc.handCapacity - sc.startingHand.length;
+  assert.ok(availableSlots > 0, `Scooter ${sc.name} must have available empty slots for market purchases`);
+
+  const artSvg = scooterArtFor(sc);
+  assert.ok(artSvg && typeof artSvg === 'string', `Scooter art SVG must be non-empty string for ${sc.id}`);
+  assert.ok(artSvg.includes('<svg') && artSvg.includes('</svg>'), `Scooter art must produce valid SVG for ${sc.id}`);
+  assert.ok(SCOOTER_ART[sc.id], `Explicit custom SVG must exist in SCOOTER_ART for ${sc.id}`);
+}
+console.log('   ✓ Scooter vector art (7/7) and empty slot capacities verified.');
+
+console.log('\n✅ ALL 11 v0.10 SEVEN SEAS INTEGRATION TESTS PASSED SUCCESSFULLY!');

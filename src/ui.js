@@ -3,6 +3,7 @@
  */
 import { GameState } from './game.js';
 import { FISH_ART } from './fish_art.js';
+import { scooterArtFor } from './scooter_art.js';
 import {
   GAME_DATA, SEA_ORDER, getSea, scootersForSea, defaultScooterForSea,
   buildDrawPile, buildTreasureDeck, isUnlocked
@@ -33,8 +34,8 @@ function fishArtFor(fish) {
 }
 
 function opClass(card) {
-  if (card.op === '×') return 'op-mult';
-  if (card.op === '-') return 'op-sub';
+  if (card.op === '×' || card.op === 'x' || card.op === '*') return 'op-mult';
+  if (card.op === '-' || card.op === '−') return 'op-sub';
   return 'op-add';
 }
 
@@ -149,6 +150,10 @@ export class GameUI {
     this.gameBannerEl = document.getElementById('game-status-banner');
     this.finalAttackBannerEl = document.getElementById('final-attack-banner');
     this.faTargetNumEl = document.getElementById('fa-target-num');
+
+    // Scooter Card Panel (Bottom Right)
+    this.scooterCardDisplayEl = document.getElementById('scooter-card-display');
+    this.scooterPanelSeaHint = document.getElementById('scooter-panel-sea-hint');
 
     // Debug Controls
     this.debugSkipBtn = document.getElementById('debug-skip-monster');
@@ -1143,33 +1148,66 @@ export class GameUI {
       ? g.hand // When replacing/discarding, show all cards in hand
       : g.hand.filter(c => !selectedIds.has(c.uid || c.id));
 
-    if (cardsInHand.length === 0) {
-      this.handNumberCardsEl.innerHTML = '<div class="empty-hand-hint">All cards from your hand are on the Calculation Workbench. Click any card on the workbench to return it to your hand.</div>';
-    } else {
-      cardsInHand.forEach(c => {
-        const cardEl = document.createElement('div');
-        cardEl.className = `portrait-card game-card number-card ${opClass(c)}`;
-        if (isDiscarding) {
-          cardEl.classList.add('selectable-for-replacement');
-          cardEl.title = `Click to PERMANENTLY DISCARD ${c.label}`;
-        } else if (isReplacing) {
-          cardEl.classList.add('selectable-for-replacement');
-          cardEl.title = `Click to PERMANENTLY REMOVE ${c.label} and add ${g.pendingPurchase.card.label}`;
+    this.handNumberCardsEl.innerHTML = '';
+
+    if (cardsInHand.length === 0 && !isBlocked) {
+      const hintEl = document.createElement('div');
+      hintEl.className = 'empty-hand-hint';
+      hintEl.style.width = '100%';
+      hintEl.textContent = 'All cards from your hand are on the Calculation Workbench. Click any card on the workbench to return it to your hand.';
+      this.handNumberCardsEl.appendChild(hintEl);
+    }
+
+    cardsInHand.forEach(c => {
+      const cardEl = document.createElement('div');
+      cardEl.className = `portrait-card game-card number-card ${opClass(c)}`;
+      if (isDiscarding) {
+        cardEl.classList.add('selectable-for-replacement');
+        cardEl.title = `Click to PERMANENTLY DISCARD ${c.label}`;
+      } else if (isReplacing) {
+        cardEl.classList.add('selectable-for-replacement');
+        cardEl.title = `Click to PERMANENTLY REMOVE ${c.label} and add ${g.pendingPurchase.card.label}`;
+      } else {
+        cardEl.title = 'Click to place this card onto the Calculation Workbench';
+      }
+
+      const replaceTag = isBlocked ? `<div class="card-match-indicator" style="background:#d97706;">${isDiscarding ? 'DISCARD' : 'SCRAP'}</div>` : '';
+
+      cardEl.innerHTML = `
+        <div class="card-corner-top">${c.label}</div>
+        <div class="card-center-val">${c.label}</div>
+        <div class="card-target-bottom">🎯 ${c.target}</div>
+        ${replaceTag}
+      `;
+      cardEl.addEventListener('click', () => this.toggleNumberCardSelection(c));
+      this.handNumberCardsEl.appendChild(cardEl);
+    });
+
+    // Render dotted outlines for available scooter card slots
+    const occupiedSlots = cardsInHand.length;
+    const totalSlots = g.maxHandCapacity || 8;
+    for (let slotIdx = occupiedSlots + 1; slotIdx <= totalSlots; slotIdx++) {
+      const slotEl = document.createElement('div');
+      slotEl.className = 'portrait-card hand-slot-empty';
+      slotEl.title = `Scooter Card Slot ${slotIdx} (Available • Buy cards from the market to fill)`;
+      slotEl.innerHTML = `
+        <div class="card-corner-top slot-corner">#${slotIdx}</div>
+        <div class="slot-center-body">
+          <span class="slot-plus">＋</span>
+          <span class="slot-name">Empty</span>
+        </div>
+        <div class="card-target-bottom slot-target">Available</div>
+      `;
+      slotEl.addEventListener('click', () => {
+        if (isReplacing) {
+          this.spawnFloatingCallout(slotEl, '⚠️ Click a card to replace!', 'miss', -8);
+        } else if (isDiscarding) {
+          this.spawnFloatingCallout(slotEl, '⚠️ Click a card to discard!', 'miss', -8);
         } else {
-          cardEl.title = 'Click to place this card onto the Calculation Workbench';
+          this.spawnFloatingCallout(slotEl, '🛒 Buy cards in Market to fill slot!', 'info', -8);
         }
-
-        const replaceTag = isBlocked ? `<div class="card-match-indicator" style="background:#d97706;">${isDiscarding ? 'DISCARD' : 'SCRAP'}</div>` : '';
-
-        cardEl.innerHTML = `
-          <div class="card-corner-top">${c.label}</div>
-          <div class="card-center-val">${c.label}</div>
-          <div class="card-target-bottom">🎯 ${c.target}</div>
-          ${replaceTag}
-        `;
-        cardEl.addEventListener('click', () => this.toggleNumberCardSelection(c));
-        this.handNumberCardsEl.appendChild(cardEl);
       });
+      this.handNumberCardsEl.appendChild(slotEl);
     }
 
     // 6. Stats Bar
@@ -1274,6 +1312,92 @@ export class GameUI {
         <span class="log-msg">${item.msg}</span>
       </div>
     `).join('');
+
+    // 10. Current Scooter Card Rendering (Bottom Right)
+    this.renderScooterCard();
+  }
+
+  renderScooterCard() {
+    if (!this.scooterCardDisplayEl) return;
+    const g = this.game;
+    const s = g.scooter;
+    if (!s) {
+      this.scooterCardDisplayEl.innerHTML = '<div style="color:#64748b; font-size:0.85rem; padding: 12px;">No scooter equipped.</div>';
+      return;
+    }
+
+    if (this.scooterPanelSeaHint) {
+      this.scooterPanelSeaHint.textContent = `Sea ${s.sea} Equipment`;
+    }
+
+    // Battery Pips
+    const pipsHtml = Array.from({ length: g.maxBolts }, (_, i) => {
+      const isCharged = i < g.currentBolts;
+      return `<span class="bolt-pip ${isCharged ? 'pip-charged' : 'pip-spent'}" title="${isCharged ? `Bolt ${i + 1}: Charged` : `Bolt ${i + 1}: Spent`}">${isCharged ? '⚡' : '○'}</span>`;
+    }).join('');
+
+    // Starting Hand Mini Cards
+    const startingHandCards = Array.isArray(s.startingHand) ? s.startingHand : [];
+    const startingCardsHtml = startingHandCards.map(c => `
+      <div class="scooter-mini-card ${opClass(c)}" title="Starting Toolkit Card: ${c.label} (Target 🎯 ${c.target})">
+        <span class="mini-corner">${c.label}</span>
+        <span class="mini-val">${c.label}</span>
+        <span class="mini-target">🎯${c.target}</span>
+      </div>
+    `).join('');
+
+    // Special Ability text
+    let abilityHtml = '';
+    if (s.abilityText && s.abilityText.trim().length > 0) {
+      abilityHtml = `<div class="ability-active">✨ <strong>${s.abilityText}</strong></div>`;
+    } else {
+      abilityHtml = `<div class="ability-none">Standard Propulsion Engine (Costs 1 bolt per movement/action. Refills fully when a sea creature is defeated).</div>`;
+    }
+
+    const availableSlots = Math.max(0, g.maxHandCapacity - g.hand.length);
+
+    this.scooterCardDisplayEl.innerHTML = `
+      <div class="scooter-tcg-card">
+        <div class="scooter-tcg-header">
+          <div class="scooter-tcg-title-row">
+            <h3 class="scooter-tcg-name">🛵 ${s.name}</h3>
+            <span class="scooter-tcg-sea-badge">🌊 Sea ${s.sea}</span>
+          </div>
+          ${s.concept ? `<div class="scooter-tcg-concept">"${s.concept}"</div>` : ''}
+        </div>
+
+        <div class="scooter-tcg-art-frame" title="${s.name} blueprint art">
+          ${scooterArtFor(s)}
+        </div>
+
+        <div class="scooter-tcg-specs">
+          <div class="scooter-spec-box spec-battery">
+            <div class="spec-label">⚡ Battery Charge</div>
+            <div class="spec-value">${g.currentBolts} / ${g.maxBolts} <span class="spec-unit">Bolts</span></div>
+            <div class="spec-pips">${pipsHtml}</div>
+          </div>
+          <div class="scooter-spec-box spec-hand">
+            <div class="spec-label">✋ Hand Capacity</div>
+            <div class="spec-value">${g.hand.length} / ${g.maxHandCapacity} <span class="spec-unit">Cards</span></div>
+            <div class="spec-sub">${availableSlots} available slot${availableSlots === 1 ? '' : 's'}</div>
+          </div>
+        </div>
+
+        <div class="scooter-tcg-section">
+          <div class="section-title">🎒 Starting Toolkit (${startingHandCards.length} Cards)</div>
+          <div class="scooter-tcg-hand-pills">
+            ${startingCardsHtml}
+          </div>
+        </div>
+
+        <div class="scooter-tcg-section">
+          <div class="section-title">✨ Special Abilities & Systems</div>
+          <div class="scooter-tcg-ability">
+            ${abilityHtml}
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   renderQuests() {

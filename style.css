@@ -2538,3 +2538,373 @@ body {
   0%, 100% { transform: scale(1); }
   35% { transform: scale(1.14); background: #fde68a; box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
 }
+
+/* ==========================================================================
+   Hand Card Slots with Dotted Outlines
+   ========================================================================== */
+
+.portrait-card.hand-slot-empty {
+  background: rgba(248, 250, 252, 0.65);
+  border: 2px dashed #94a3b8;
+  color: #64748b;
+  box-shadow: none;
+  cursor: default;
+  transition: all 0.2s ease;
+}
+
+.portrait-card.hand-slot-empty:hover {
+  border-color: #0284c7;
+  background: rgba(240, 249, 255, 0.85);
+  color: #0369a1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.12);
+  cursor: pointer;
+}
+
+.portrait-card.hand-slot-empty .slot-corner {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.portrait-card.hand-slot-empty:hover .slot-corner {
+  color: #0284c7;
+}
+
+.portrait-card.hand-slot-empty .slot-center-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.portrait-card.hand-slot-empty .slot-plus {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 300;
+  color: #cbd5e1;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.portrait-card.hand-slot-empty:hover .slot-plus {
+  color: #0284c7;
+  transform: scale(1.18);
+}
+
+.portrait-card.hand-slot-empty .slot-name {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8;
+}
+
+.portrait-card.hand-slot-empty:hover .slot-name {
+  color: #0369a1;
+}
+
+.portrait-card.hand-slot-empty .slot-target {
+  background: rgba(241, 245, 249, 0.85);
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  font-size: 0.62rem;
+  padding: 1px 5px;
+}
+
+.portrait-card.hand-slot-empty:hover .slot-target {
+  background: #e0f2fe;
+  color: #0284c7;
+  border-color: #7dd3fc;
+}
+
+/* ==========================================================================
+   Current Scooter Card Representation (Bottom Right Panel)
+   ========================================================================== */
+
+.scooter-card-panel {
+  border-top: 4px solid #0284c7;
+  background: #f8fafc;
+}
+
+.scooter-card-display {
+  display: flex;
+  flex-direction: column;
+}
+
+.scooter-tcg-card {
+  background: linear-gradient(165deg, #ffffff 0%, #f0f9ff 55%, #e0f2fe 100%);
+  border: 2px solid #38bdf8;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow 0.2s ease;
+}
+
+.scooter-tcg-card:hover {
+  box-shadow: 0 8px 22px rgba(2, 132, 199, 0.2);
+}
+
+/* Scooter Card Header */
+.scooter-tcg-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1px solid #bae6fd;
+  padding-bottom: 8px;
+}
+
+.scooter-tcg-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scooter-tcg-name {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0c4a6e;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scooter-tcg-sea-badge {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
+}
+
+.scooter-tcg-concept {
+  font-size: 0.78rem;
+  color: #0369a1;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* Hero Frame for Scooter Vector Art */
+.scooter-tcg-art-frame {
+  background: radial-gradient(circle at 50% 40%, #0c4a6e 0%, #082f49 70%, #02131e 100%);
+  border: 1.5px solid #0284c7;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+  min-height: 120px;
+}
+
+.scooter-tcg-art-frame .scooter-svg {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  max-height: 115px;
+  display: block;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+  transition: transform 0.25s ease;
+}
+
+.scooter-tcg-card:hover .scooter-tcg-art-frame .scooter-svg {
+  transform: scale(1.04) translateY(-2px);
+}
+
+/* Core Specs Grid: Battery Charge & Card Slots */
+.scooter-tcg-specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.scooter-spec-box {
+  background: #ffffff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.scooter-spec-box .spec-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #0369a1;
+  text-transform: uppercase;
+}
+
+.scooter-spec-box .spec-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.scooter-spec-box .spec-unit {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.scooter-spec-box .spec-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #0284c7;
+}
+
+.spec-pips {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.bolt-pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.bolt-pip.pip-charged {
+  background: #fef08a;
+  color: #854d0e;
+  border: 1px solid #eab308;
+  box-shadow: 0 0 4px rgba(234, 179, 8, 0.45);
+}
+
+.bolt-pip.pip-spent {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px dashed #cbd5e1;
+  opacity: 0.6;
+}
+
+/* Sections for Toolkit & Abilities */
+.scooter-tcg-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.scooter-tcg-section .section-title {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #0369a1;
+  text-transform: uppercase;
+}
+
+/* Mini Cards for Starting Hand */
+.scooter-tcg-hand-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scooter-mini-card {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 44px;
+  height: 60px;
+  border-radius: 5px;
+  padding: 3px 2px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  user-select: none;
+  transition: transform 0.15s ease;
+}
+
+.scooter-mini-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.scooter-mini-card.op-add {
+  border-color: #3b82f6;
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+  color: #1e40af;
+}
+
+.scooter-mini-card.op-sub {
+  border-color: #ef4444;
+  background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%);
+  color: #b91c1c;
+}
+
+.scooter-mini-card.op-mult {
+  border-color: #8b5cf6;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+  color: #6d28d9;
+}
+
+.scooter-mini-card .mini-corner {
+  align-self: flex-start;
+  font-size: 0.55rem;
+  font-weight: 800;
+  line-height: 1;
+  padding-left: 1px;
+}
+
+.scooter-mini-card .mini-val {
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.scooter-mini-card .mini-target {
+  font-size: 0.52rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Scooter Ability Box */
+.scooter-tcg-ability {
+  background: #ffffff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #1e293b;
+}
+
+.scooter-tcg-ability .ability-active {
+  color: #0369a1;
+  font-weight: 700;
+}
+
+.scooter-tcg-ability .ability-none {
+  color: #64748b;
+  font-style: italic;
+}
