@@ -42,15 +42,27 @@ function findLocalWorkbook() {
   return path.join(DATA_DIR, candidates[0].f);
 }
 
-function fetchOnlineWorkbook(url, timeoutMs = 6000) {
+function fetchOnlineWorkbook(url, timeoutMs = 25000) {
   return new Promise((resolve, reject) => {
-    const client = url.startsWith('http:') ? http : https;
-    const req = client.get(url, (res) => {
+    // Add cache-busting timestamp to avoid Google CDN serving stale exports
+    let fetchUrl = url;
+    if (!fetchUrl.includes('_t=')) {
+      fetchUrl += (fetchUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    }
+    const client = fetchUrl.startsWith('http:') ? http : https;
+    const options = {
+      headers: {
+        'Cache-Control': 'no-cache, no-store',
+        'Pragma': 'no-cache',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) MathsHandbuilderImporter/1.0'
+      }
+    };
+    const req = client.get(fetchUrl, options, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         return resolve(fetchOnlineWorkbook(res.headers.location, timeoutMs));
       }
       if (res.statusCode !== 200) {
-        return reject(new Error(`HTTP ${res.statusCode} from ${url}`));
+        return reject(new Error(`HTTP ${res.statusCode} from ${fetchUrl}`));
       }
       const chunks = [];
       res.on('data', chunk => chunks.push(chunk));
@@ -60,7 +72,7 @@ function fetchOnlineWorkbook(url, timeoutMs = 6000) {
     req.on('error', reject);
     req.setTimeout(timeoutMs, () => {
       req.destroy();
-      reject(new Error(`Timeout after ${timeoutMs}ms connecting to ${url}`));
+      reject(new Error(`Timeout after ${timeoutMs}ms connecting to Google Docs`));
     });
   });
 }
@@ -92,13 +104,14 @@ async function loadWorkbook() {
   const targetUrl = (arg && arg.startsWith('http')) ? arg : DEFAULT_ONLINE_URL;
   try {
     process.stdout.write(`Fetching latest spreadsheet from Google Docs... `);
-    const buffer = await fetchOnlineWorkbook(targetUrl, 5000);
+    const buffer = await fetchOnlineWorkbook(targetUrl, 25000);
     console.log(`done (${Math.round(buffer.length / 1024)} KB).`);
 
     // Sync a local copy to data/ so offline builds remain functional
     try {
       const localFile = path.join(DATA_DIR, 'Maths_Handbuilder_Card_Content_v6(1).xlsx');
       fs.writeFileSync(localFile, buffer);
+      console.log(`Synced local backup to ${path.basename(localFile)}.`);
     } catch (e) { /* ignore write issues */ }
 
     return {
@@ -106,8 +119,8 @@ async function loadWorkbook() {
       source: 'Google Docs (online)'
     };
   } catch (err) {
-    console.log(`\n⚠ Could not reach Google Docs online (${err.message}).`);
-    console.log(`Falling back to local workbook in /data...`);
+    console.log(`\n⚠️  Could not reach Google Docs online (${err.message}).`);
+    console.log(`⚠️  Falling back to local workbook in /data (may not contain latest online changes)...`);
     const filePath = findLocalWorkbook();
     return {
       buffer: fs.readFileSync(filePath),
@@ -403,7 +416,7 @@ function importWorkbook(buffer, sourceLabel) {
     return {
       id,
       letter,
-      name: str(r['Sea Name']),
+      name: str(r['Sea Name'] || r['Sea name'] || r['Name'] || r['Sea']),
       description: str(r['What you are doing']),
       mathsFocus: str(r['Maths Focus']),
       encounterRulesText: rulesText,
@@ -529,6 +542,7 @@ async function main() {
   console.log(`Imported ${data.source} → data/game_data.js`);
   console.log(`  ${data.seas.length} seas, ${data.scooters.length} scooters, ${data.numberCards.length} number cards, ` +
     `${data.fish.length} fish, ${data.treasures.length} treasures, ${Object.keys(data.quests).length} quest sets`);
+  console.log(`  Seas: ${data.seas.map(s => `${s.letter} ("${s.name}")`).join(', ')}`);
   if (warnings.length) {
     console.log(`\n⚠ ${warnings.length} warning(s):`);
     for (const w of warnings) console.log(`  - ${w}`);

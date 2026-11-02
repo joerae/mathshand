@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Google Docs (online)",
-  "importedAt": "2026-11-02T22:52:57.092Z",
+  "importedAt": "2026-11-02T23:04:04.922Z",
   "seaOrder": [
     "A",
     "B",
@@ -50,7 +50,7 @@ export const GAME_DATA = {
     {
       "id": "B_Sea",
       "letter": "B",
-      "name": "Extended Addition",
+      "name": "Reef Divers",
       "description": "Unlocking new cards, hitting new targets. Number bonds for 10,20,30",
       "mathsFocus": "+10, +12, +20; bonds across 10/20/30",
       "encounterRulesText": "Introducing larger fish sums",
@@ -134,7 +134,7 @@ export const GAME_DATA = {
     {
       "id": "F_Sea",
       "letter": "F",
-      "name": "Negative Currents",
+      "name": "Multiplications Depths",
       "description": "Learn about multiplifying 6,7,8,9",
       "mathsFocus": "x6 to x9",
       "encounterRulesText": "Learning x6 through to x9",
@@ -155,7 +155,7 @@ export const GAME_DATA = {
     {
       "id": "G_Sea",
       "letter": "G",
-      "name": "Times Table Trench",
+      "name": "Revision Ocean",
       "description": "Adding negative multiplicaiton of 2,3,4 and 10 against -6 to -9",
       "mathsFocus": "Negative multiplication and all over revision and great stuff",
       "encounterRulesText": "Revision, including negative multiplication",
