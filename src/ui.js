@@ -589,7 +589,10 @@ export class GameUI {
   handleAttack() {
     if (this.game.status !== 'in_progress') return;
     if (this.game.isBlocked) {
-      this.spawnFloatingCallout(this.handNumberCardsEl, '⏳ Choose a card in your hand first!', 'miss', -10);
+      const msg = this.game.pendingDiscard
+        ? '⏳ Discard a card from your hand first!'
+        : '⏳ Choose a card in your hand first!';
+      this.spawnFloatingCallout(this.handNumberCardsEl, msg, 'miss', -10);
       return;
     }
 
@@ -658,7 +661,10 @@ export class GameUI {
   handleBuy(type, index) {
     if (this.game.status !== 'in_progress' && this.game.status !== 'post_game') return;
     if (this.game.isBlocked) {
-      this.spawnFloatingCallout(this.handNumberCardsEl, '⏳ Choose a card in your hand first!', 'miss', -10);
+      const msg = this.game.pendingDiscard
+        ? '⏳ Discard a card from your hand first!'
+        : '⏳ Choose a card in your hand first!';
+      this.spawnFloatingCallout(this.handNumberCardsEl, msg, 'miss', -10);
       return;
     }
 
@@ -1138,8 +1144,8 @@ export class GameUI {
       this.handDiscardAlert.classList.toggle('hidden', !isDiscarding);
       if (isDiscarding) {
         const n = g.pendingDiscard.remaining;
-        this.discardTitle.textContent = `🐙 ${g.pendingDiscard.source.toUpperCase()} ATTACKS!`;
-        this.discardPromptText.textContent = `Click ${n} card${n > 1 ? 's' : ''} below to permanently discard ${n > 1 ? 'them' : 'it'}.`;
+        this.discardTitle.textContent = `🐙 ${g.pendingDiscard.source.toUpperCase()} DEFEATED — DISCARD REQUIRED!`;
+        this.discardPromptText.textContent = `Defeating ${g.pendingDiscard.source} forces you to discard ${n} number card${n > 1 ? 's' : ''} of your choice. Click a card in your hand to discard.`;
       }
     }
 
@@ -1163,7 +1169,7 @@ export class GameUI {
       cardEl.className = `portrait-card game-card number-card ${opClass(c)}`;
       if (isDiscarding) {
         cardEl.classList.add('selectable-for-replacement');
-        cardEl.title = `Click to PERMANENTLY DISCARD ${c.label}`;
+        cardEl.title = `Click to PERMANENTLY DISCARD ${c.label} (${g.pendingDiscard.source} defeat effect)`;
       } else if (isReplacing) {
         cardEl.classList.add('selectable-for-replacement');
         cardEl.title = `Click to PERMANENTLY REMOVE ${c.label} and add ${g.pendingPurchase.card.label}`;

@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Google Docs (online)",
-  "importedAt": "2026-11-02T21:05:14.531Z",
+  "importedAt": "2026-11-02T21:39:05.066Z",
   "seaOrder": [
     "A",
     "B",
@@ -136,8 +136,8 @@ export const GAME_DATA = {
       "letter": "F",
       "name": "Negative Currents",
       "description": "Learn about multiplifying 6,7,8,9",
-      "mathsFocus": "−6 to −9; maybe ×−2 and negative products",
-      "encounterRulesText": "Random/curated as needed",
+      "mathsFocus": "x6 to x9",
+      "encounterRulesText": "Finish with Theiving Sqiud",
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
@@ -150,15 +150,15 @@ export const GAME_DATA = {
       "startFishId": null,
       "finalFishId": "F_Fish",
       "fixedFishIds": null,
-      "newNumberCardsText": "-6,-7,-8,-9, x-2(?)"
+      "newNumberCardsText": "x6,x7,x8,x9"
     },
     {
       "id": "G_Sea",
       "letter": "G",
       "name": "Times Table Trench",
       "description": "Adding negative multiplicaiton of 2,3,4 and 10 against -6 to -9",
-      "mathsFocus": "×6 to ×9",
-      "encounterRulesText": "Great White Shark is the fixed final encounter; earlier fish selected from Sea G eligible pool (details TBD)",
+      "mathsFocus": "Negative multiplication and all over revision and great stuff",
+      "encounterRulesText": "",
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
@@ -171,7 +171,7 @@ export const GAME_DATA = {
       "startFishId": null,
       "finalFishId": "G_Fish",
       "fixedFishIds": null,
-      "newNumberCardsText": "x6,x7,x8,x9"
+      "newNumberCardsText": "-6,-7,-8,-9"
     }
   ],
   "scooters": [
@@ -380,9 +380,21 @@ export const GAME_DATA = {
       "startingHand": [
         {
           "op": "+",
-          "value": 5,
-          "label": "+5",
-          "target": 5
+          "value": 2,
+          "label": "+2",
+          "target": 2
+        },
+        {
+          "op": "+",
+          "value": 6,
+          "label": "+6",
+          "target": 6
+        },
+        {
+          "op": "+",
+          "value": 8,
+          "label": "+8",
+          "target": 8
         },
         {
           "op": "-",
@@ -426,9 +438,9 @@ export const GAME_DATA = {
         },
         {
           "op": "+",
-          "value": 10,
-          "label": "+10",
-          "target": 10
+          "value": 7,
+          "label": "+7",
+          "target": 7
         },
         {
           "op": "-",
@@ -730,54 +742,6 @@ export const GAME_DATA = {
       "enabled": true
     },
     {
-      "id": "G_Num_1",
-      "sea": "G",
-      "op": "-",
-      "value": 6,
-      "label": "−6",
-      "target": 6,
-      "copies": 2,
-      "mathsType": "Extended subtraction",
-      "status": "Working",
-      "enabled": true
-    },
-    {
-      "id": "G_Num_2",
-      "sea": "G",
-      "op": "-",
-      "value": 7,
-      "label": "−7",
-      "target": 7,
-      "copies": 2,
-      "mathsType": "Extended subtraction",
-      "status": "Working",
-      "enabled": true
-    },
-    {
-      "id": "G_Num_3",
-      "sea": "G",
-      "op": "-",
-      "value": 8,
-      "label": "−8",
-      "target": 8,
-      "copies": 2,
-      "mathsType": "Extended subtraction",
-      "status": "Working",
-      "enabled": true
-    },
-    {
-      "id": "G_Num_4",
-      "sea": "G",
-      "op": "-",
-      "value": 9,
-      "label": "−9",
-      "target": 9,
-      "copies": 2,
-      "mathsType": "Extended subtraction",
-      "status": "Working",
-      "enabled": true
-    },
-    {
       "id": "F_Num_1",
       "sea": "F",
       "op": "×",
@@ -824,6 +788,54 @@ export const GAME_DATA = {
       "mathsType": "Extended times tables",
       "status": "Working",
       "enabled": true
+    },
+    {
+      "id": "G_Num_1",
+      "sea": "G",
+      "op": "-",
+      "value": 6,
+      "label": "−6",
+      "target": 6,
+      "copies": 2,
+      "mathsType": "Extended subtraction",
+      "status": "Working",
+      "enabled": true
+    },
+    {
+      "id": "G_Num_2",
+      "sea": "G",
+      "op": "-",
+      "value": 7,
+      "label": "−7",
+      "target": 7,
+      "copies": 2,
+      "mathsType": "Extended subtraction",
+      "status": "Working",
+      "enabled": true
+    },
+    {
+      "id": "G_Num_3",
+      "sea": "G",
+      "op": "-",
+      "value": 8,
+      "label": "−8",
+      "target": 8,
+      "copies": 2,
+      "mathsType": "Extended subtraction",
+      "status": "Working",
+      "enabled": true
+    },
+    {
+      "id": "G_Num_4",
+      "sea": "G",
+      "op": "-",
+      "value": 9,
+      "label": "−9",
+      "target": 9,
+      "copies": 2,
+      "mathsType": "Extended subtraction",
+      "status": "Working",
+      "enabled": true
     }
   ],
   "fish": [
@@ -835,7 +847,7 @@ export const GAME_DATA = {
       "target": 10,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Sea A fixed encounter",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -846,7 +858,7 @@ export const GAME_DATA = {
       "target": 16,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Sea A fixed encounter",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -857,7 +869,7 @@ export const GAME_DATA = {
       "target": 19,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Sea A fixed encounter",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -868,7 +880,7 @@ export const GAME_DATA = {
       "target": 24,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Sea A fixed encounter",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -879,7 +891,7 @@ export const GAME_DATA = {
       "target": 20,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Available",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -890,7 +902,7 @@ export const GAME_DATA = {
       "target": 30,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Available",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -901,7 +913,7 @@ export const GAME_DATA = {
       "target": -8,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Available",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -912,7 +924,7 @@ export const GAME_DATA = {
       "target": -9,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Available",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -925,7 +937,7 @@ export const GAME_DATA = {
       "abilities": {
         "noRecharge": true
       },
-      "encounterStatus": "Available",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -936,7 +948,7 @@ export const GAME_DATA = {
       "target": 50,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Available",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -944,12 +956,12 @@ export const GAME_DATA = {
       "sea": "E",
       "name": "Kraken Takin’ a Break’n",
       "copies": 1,
-      "target": 25,
+      "target": 15,
       "abilityText": "Discard one number card of your choice when defeated",
       "abilities": {
-        "discardOnEncounter": 1
+        "discardOnDefeat": 1
       },
-      "encounterStatus": "Available",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -957,7 +969,7 @@ export const GAME_DATA = {
       "sea": "E",
       "name": "Hydra",
       "copies": 1,
-      "target": 35,
+      "target": 32,
       "abilityText": "Must land two separate targets (35 and 63); two successful attacks",
       "abilities": {
         "multiTargets": [
@@ -965,7 +977,29 @@ export const GAME_DATA = {
           63
         ]
       },
-      "encounterStatus": "Available",
+      "encounterStatus": "",
+      "notes": ""
+    },
+    {
+      "id": "E_Fish_3",
+      "sea": "E",
+      "name": "Squarefish",
+      "copies": 1,
+      "target": 25,
+      "abilityText": "",
+      "abilities": {},
+      "encounterStatus": "",
+      "notes": ""
+    },
+    {
+      "id": "E_Fish_4",
+      "sea": "E",
+      "name": "Blackjack fish",
+      "copies": 1,
+      "target": 21,
+      "abilityText": "",
+      "abilities": {},
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -978,7 +1012,7 @@ export const GAME_DATA = {
       "abilities": {
         "destroyTreasureOnEncounter": true
       },
-      "encounterStatus": "Available",
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -989,9 +1023,31 @@ export const GAME_DATA = {
       "target": -21,
       "abilityText": "Discard one number cards of your choice when defeated",
       "abilities": {
-        "discardOnEncounter": 1
+        "discardOnDefeat": 1
       },
-      "encounterStatus": "Available",
+      "encounterStatus": "",
+      "notes": ""
+    },
+    {
+      "id": "F_Fish_3",
+      "sea": "F",
+      "name": "Squarefish XL",
+      "copies": 1,
+      "target": 49,
+      "abilityText": "",
+      "abilities": {},
+      "encounterStatus": "",
+      "notes": ""
+    },
+    {
+      "id": "F_Fish_4",
+      "sea": "F",
+      "name": "Leatherjacket",
+      "copies": 1,
+      "target": 48,
+      "abilityText": "",
+      "abilities": {},
+      "encounterStatus": "",
       "notes": ""
     },
     {
@@ -1002,8 +1058,8 @@ export const GAME_DATA = {
       "target": 99,
       "abilityText": "",
       "abilities": {},
-      "encounterStatus": "Fixed final encounter in Sea G",
-      "notes": "Moved from Sea A to Sea G; target 98 retained."
+      "encounterStatus": "",
+      "notes": ""
     },
     {
       "id": "G_Fish_2",
@@ -1014,7 +1070,7 @@ export const GAME_DATA = {
       "abilityText": "",
       "abilities": {},
       "encounterStatus": "",
-      "notes": "Moved from Sea A to Sea G; target 98 retained."
+      "notes": ""
     }
   ],
   "treasures": [
@@ -1026,7 +1082,7 @@ export const GAME_DATA = {
       "target": 4,
       "gems": 1,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "A_Treasure_2",
@@ -1036,7 +1092,7 @@ export const GAME_DATA = {
       "target": 8,
       "gems": 1,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "A_Treasure_3",
@@ -1046,7 +1102,7 @@ export const GAME_DATA = {
       "target": 12,
       "gems": 1,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "A_Treasure_4",
@@ -1056,17 +1112,17 @@ export const GAME_DATA = {
       "target": 18,
       "gems": 1,
       "specialRule": "",
-      "status": "Provisional"
+      "status": ""
     },
     {
       "id": "B_Treasure",
       "sea": "B",
       "name": "Golden Shell",
       "copies": 1,
-      "target": 25,
+      "target": 22,
       "gems": 2,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "B_Treasure_2",
@@ -1076,7 +1132,7 @@ export const GAME_DATA = {
       "target": 32,
       "gems": 2,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "C_Treasure",
@@ -1086,7 +1142,7 @@ export const GAME_DATA = {
       "target": -12,
       "gems": 2,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "C_Treasure_2",
@@ -1096,7 +1152,7 @@ export const GAME_DATA = {
       "target": -13,
       "gems": 3,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "D_Treasure",
@@ -1106,7 +1162,7 @@ export const GAME_DATA = {
       "target": 18,
       "gems": 2,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "D_Treasure_2",
@@ -1116,17 +1172,17 @@ export const GAME_DATA = {
       "target": 22,
       "gems": 3,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "E_Treasure",
       "sea": "E",
       "name": "Pirate Crown",
       "copies": 1,
-      "target": 54,
+      "target": 13,
       "gems": 2,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "E_Treasure_2",
@@ -1134,9 +1190,9 @@ export const GAME_DATA = {
       "name": "Sunken Safe",
       "copies": 1,
       "target": 16,
-      "gems": 3,
+      "gems": 2,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "F_Treasure",
@@ -1146,7 +1202,7 @@ export const GAME_DATA = {
       "target": -21,
       "gems": 3,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "F_Treasure_2",
@@ -1156,7 +1212,7 @@ export const GAME_DATA = {
       "target": 42,
       "gems": 3,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "G_Treasure",
@@ -1166,7 +1222,7 @@ export const GAME_DATA = {
       "target": 56,
       "gems": 3,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     },
     {
       "id": "G_Treasure_2",
@@ -1176,7 +1232,7 @@ export const GAME_DATA = {
       "target": -64,
       "gems": 3,
       "specialRule": "",
-      "status": "Proposed"
+      "status": ""
     }
   ],
   "quests": {

@@ -194,7 +194,12 @@ function parseFishAbility(text, context) {
   }
   const discard = lower.match(/discard (\w+) (number )?cards?/);
   if (discard) {
-    a.discardOnEncounter = WORD_NUMBERS[discard[1]] ?? (parseInt(discard[1], 10) || 1);
+    const count = WORD_NUMBERS[discard[1]] ?? (parseInt(discard[1], 10) || 1);
+    if (/when defeated|on defeat/.test(lower)) {
+      a.discardOnDefeat = count;
+    } else {
+      a.discardOnEncounter = count;
+    }
     recognised = true;
   }
   if (/unclaimed treasures? (disappear|are destroyed|are removed)/.test(lower)) {

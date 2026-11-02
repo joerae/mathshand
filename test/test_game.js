@@ -168,18 +168,18 @@ jellyGame.hand.push({ uid: 'j40', type: 'number', op: '+', value: 40, label: '+4
 jellyGame.playAttack([jellyGame.hand.find(c => c.uid === 'j40')]);
 assert.strictEqual(jellyGame.currentBolts, 1, 'Jellyfish defeat does NOT recharge battery (costs 1 bolt: 2 -> 1)');
 
-// 7b. Kraken (Discard 2 number cards on encounter)
+// 7b. Kraken (Discard 1 number card when DEFEATED)
 const krakenGame = new GameState({
   sea: 'E',
-  encounters: [{ id: 'E_Fish', name: "Kraken Takin' a Break'n", target: 35, abilities: { discardOnEncounter: 2 } }]
+  encounters: [{ id: 'E_Fish_3', name: "Kraken Takin' a Break'n", target: 25, targets: [25], remainingTargets: [25], abilities: { discardOnDefeat: 1 } }]
 });
-assert.strictEqual(krakenGame.pendingDiscard !== null, true, 'Kraken forces discard on encounter');
-assert.strictEqual(krakenGame.pendingDiscard.remaining, 2);
+assert.strictEqual(krakenGame.pendingDiscard, null, 'Kraken does NOT force discard on encounter or attack');
+krakenGame.hand.push({ uid: 'k25', type: 'number', op: '+', value: 25, label: '+25', target: 25 });
+krakenGame.playAttack([krakenGame.hand.find(c => c.uid === 'k25')]);
+assert.strictEqual(krakenGame.pendingDiscard !== null, true, 'Kraken forces discard when DEFEATED');
+assert.strictEqual(krakenGame.pendingDiscard.remaining, 1);
 const d1 = krakenGame.hand[0].uid || krakenGame.hand[0].id;
 krakenGame.discardFromHand(d1);
-assert.strictEqual(krakenGame.pendingDiscard.remaining, 1);
-const d2 = krakenGame.hand[0].uid || krakenGame.hand[0].id;
-krakenGame.discardFromHand(d2);
 assert.strictEqual(krakenGame.pendingDiscard, null, 'Discard requirement resolved');
 
 // 7c. Hydra (Two separate targets: 35 and 63)

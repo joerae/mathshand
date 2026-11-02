@@ -262,7 +262,7 @@ export class GameState {
       this.addLog(`🦑 ${fish.name} steals ALL unclaimed treasure! Lost: ${lost.map(t => t.name).join(', ')}.`, 'danger');
     }
 
-    if (a.discardOnEncounter) {
+    if (a.discardOnEncounter && !a.discardOnDefeat && !/when defeated/i.test(fish.abilityText || '')) {
       const count = Math.min(a.discardOnEncounter, this.hand.length);
       if (count > 0) {
         this.pendingDiscard = { remaining: count, source: fish.name };
@@ -362,6 +362,17 @@ export class GameState {
     const slotsRefilled = this.refillEmptyMarketSlots();
     const refilledIndices = (this.lastRefilledIndices || []).slice();
     const revealedTreasure = this.revealTreasureToStockpile();
+
+    // Fish ability: discard cards when defeated
+    const discardDefeatCount = fish.abilities?.discardOnDefeat
+      || (fish.abilities?.discardOnEncounter && /when defeated/i.test(fish.abilityText || '') ? fish.abilities.discardOnEncounter : 0);
+    if (discardDefeatCount > 0) {
+      const count = Math.min(discardDefeatCount, this.hand.length);
+      if (count > 0) {
+        this.pendingDiscard = { remaining: count, source: fish.name };
+        this.addLog(`🐙 ${fish.name} DEFEATED: Choose ${count} number card${count > 1 ? 's' : ''} from your hand to permanently discard.`, 'warning');
+      }
+    }
 
     if (isFinalFish) {
       this.sharkDefeated = true;
