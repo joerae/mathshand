@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Google Docs (online)",
-  "importedAt": "2026-11-02T20:50:23.817Z",
+  "importedAt": "2026-11-02T21:05:14.531Z",
   "seaOrder": [
     "A",
     "B",

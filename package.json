@@ -6,9 +6,8 @@
   "main": "server.js",
   "scripts": {
     "import-data": "node scripts/import_xlsx.mjs",
-    "prestart": "node scripts/import_xlsx.mjs",
+    "import-local": "node scripts/import_xlsx.mjs --local",
     "start": "node server.js",
-    "pretest": "node scripts/import_xlsx.mjs",
     "test": "node test/test_game.js"
   },
   "author": "",

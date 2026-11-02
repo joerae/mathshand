@@ -12,7 +12,6 @@ Based on [`Design Docs/# Maths Handbuilder WIP.md`](./Design%20Docs/%23%20Maths%
    ```bash
    npm start
    ```
-   *(fetches the latest Google Docs spreadsheet and updates data automatically before starting)*
 
 2. Open your web browser to:
    ```
@@ -24,17 +23,27 @@ Based on [`Design Docs/# Maths Handbuilder WIP.md`](./Design%20Docs/%23%20Maths%
    npm test
    ```
 
+4. Import / update spreadsheet data (whenever you choose):
+   - Fetch the latest published Google Docs spreadsheet:
+     ```bash
+     npm run import-data
+     ```
+   - Or import strictly from the local file in `/data`:
+     ```bash
+     npm run import-local
+     ```
+
 ---
 
 ## 📊 Live Spreadsheet as the Single Source of Truth
 
 All game cards, values, quantities, encounter sequences, scooter capabilities, and quest rules are driven directly by the spreadsheet:
-- **Live Google Docs Spreadsheet**: Fetched automatically online via the published XLSX endpoint.
+- **Live Google Docs Spreadsheet**: Fetched on demand via `npm run import-data`.
 - **Offline / Local Fallback**: `data/Maths_Handbuilder_Card_Content_v6(1).xlsx` (synced on every fetch).
-- **Importer script**: `npm run import-data` (or `npm run import-data -- --local` to force local).
+- **Importer commands**:
+  - `npm run import-data`: Fetches latest Google Doc and updates `data/game_data.js`.
+  - `npm run import-local`: Reads directly from the local `.xlsx` file without touching the internet.
 - **Generated data**: `data/game_data.js` and `data/content.js`.
-
-Whenever you edit the Google Doc or save a local Excel file, run `npm run import-data` (or simply `npm start` / `npm test`), and all game data will immediately update!
 
 ### Explicit Fish Encounter Columns (Fish 1 to Fish 5)
 The `Seas` sheet defines encounters via columns **`Fish 1`** through **`Fish 5`**:
