@@ -66,25 +66,26 @@
     <div id="final-attack-banner" class="final-attack-banner hidden">
       <div class="fa-icon">⚡</div>
       <div class="fa-text">
-        <strong>OUT OF BATTERY!</strong> The scooter is at 0 bolts. You get one final Attack to hit 🎯 <span id="fa-target-num">10</span>. No other actions available. A miss ends the journey!
+        <strong>OUT OF BATTERY!</strong> The scooter is at 0 bolts. Tap the sea creature for one final Attack to hit 🎯 <span id="fa-target-num">10</span>. No other actions available. A miss ends the journey!
       </div>
     </div>
 
     <!-- Main Game Board Grid -->
     <main class="board-grid">
-      <!-- LEFT COLUMN: Sea Creature > Your Hand > Actions > Treasure Chest -->
+      <!-- LEFT COLUMN: Sea Creature > Your Hand > Sea Quests > Treasure Chest -->
       <section class="left-col">
         <!-- 1. Current Sea Creature Encounter (Physical Landscape Card) -->
         <div class="panel creature-encounter-panel">
           <div class="panel-header">
             <span class="panel-tag">CURRENT SEA CREATURE</span>
-            <span id="encounter-step-tag" class="panel-hint">Encounter Card (Landscape)</span>
+            <span id="encounter-step-tag" class="panel-hint">⚔️ Tap fish to Attack (Costs 1 ⚡)</span>
           </div>
 
           <!-- Landscape Card Simulation -->
-          <div class="fish-card-landscape" id="fish-card-landscape">
+          <div class="fish-card-landscape" id="fish-card-landscape" title="Tap to attack this sea creature with your workbench total">
             <div class="fish-card-header">
               <span id="monster-name" class="fish-card-title">Chainsaw Clownfish</span>
+              <span id="fish-attack-hint" class="fish-attack-pill">⚔️ Tap to Attack</span>
             </div>
             <div id="creature-art" class="fish-card-art">
               <!-- SVG graphic injected dynamically -->
@@ -114,7 +115,7 @@
         <div class="panel hand-panel">
           <div class="panel-header">
             <span class="panel-tag">YOUR HAND</span>
-            <span class="panel-hint">Cards are reusable • Click to chain onto Calculation Workbench</span>
+            <span class="panel-hint">Cards are reusable • Tap to chain onto Calculation Workbench</span>
           </div>
 
           <!-- Fish ability: discard cards -->
@@ -139,31 +140,7 @@
           </div>
         </div>
 
-        <!-- 3. Actions Panel -->
-        <div class="panel actions-panel">
-          <div class="panel-header">
-            <span class="panel-tag">ACTIONS (Costs 1 ⚡ Bolt)</span>
-          </div>
-
-          <div class="action-buttons-grid">
-            <button id="btn-action-attack" class="action-btn btn-attack">
-              <div class="btn-title">⚔️ Attack</div>
-              <div class="btn-sub">Hit Sea Creature 🎯 with selected cards</div>
-            </button>
-
-            <button id="btn-action-buy" class="action-btn btn-buy">
-              <div class="btn-title">🛒 Buy / Claim</div>
-              <div class="btn-sub">Hit selected Market card or Treasure 🎯</div>
-            </button>
-
-            <button id="btn-action-refresh" class="action-btn btn-refresh">
-              <div class="btn-title">🔄 Market Refresh</div>
-              <div class="btn-sub">Discard market & deal 5 new cards</div>
-            </button>
-          </div>
-        </div>
-
-        <!-- 4. Sea Quests -->
+        <!-- 3. Sea Quests -->
         <div class="panel quest-panel">
           <div class="panel-header">
             <span class="panel-tag" id="quest-panel-title">SEA QUESTS</span>
@@ -172,7 +149,7 @@
           <ul id="quest-list" class="quest-list"></ul>
         </div>
 
-        <!-- 5. Treasure Chest (Gems Collected) -->
+        <!-- 4. Treasure Chest (Gems Collected) -->
         <div class="panel treasure-panel">
           <div class="panel-header">
             <span class="panel-tag">TREASURE CHEST</span>
@@ -190,8 +167,13 @@
         <!-- 1. Market -->
         <div class="panel market-panel">
           <div class="panel-header">
-            <span class="panel-tag">MARKET (5 SLOTS)</span>
-            <span class="panel-hint">Match target to buy with <strong>Buy</strong></span>
+            <div class="market-header-left">
+              <span class="panel-tag">MARKET (5 SLOTS)</span>
+              <span class="panel-hint">🛒 Tap a card to Buy (Costs 1 ⚡)</span>
+            </div>
+            <button id="btn-action-refresh" class="btn-secondary btn-refresh-inline" title="Discard all 5 market cards and deal 5 new ones (Costs 1 Bolt)">
+              🔄 Refresh Market (⚡ 1)
+            </button>
           </div>
 
           <div id="market-slots" class="market-slots-grid">
@@ -203,7 +185,7 @@
         <div class="panel stockpile-panel">
           <div class="panel-header">
             <span class="panel-tag">TREASURE STOCKPILE</span>
-            <span class="panel-hint">Revealed by defeated sea creatures • Match target to claim</span>
+            <span class="panel-hint">💎 Tap a treasure to Claim (Costs 1 ⚡)</span>
           </div>
 
           <div id="stockpile-slots" class="stockpile-grid">

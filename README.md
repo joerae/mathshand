@@ -55,13 +55,14 @@ Choose your sea and scooter before every adventure:
 
 ## 🎮 How to Play
 
-1. **Calculations start at 0**: Click number cards from your hand in the order you wish to apply them (e.g. `0 → +3 → ×4 → −2 = 10`).
+1. **Calculations start at 0**: Tap number cards from your hand in the order you wish to apply them (e.g. `0 → +3 → ×4 → −2 = 10`).
 2. **Number cards are reusable**: Cards return to your hand after every action.
-3. **Actions cost 1 ⚡ Bolt**:
-   - **⚔️ Attack**: Match the sea creature's target number to defeat it.
-   - **🛒 Buy / Claim**: Match a Market card to acquire it into your scooter's hand, OR match a Stockpile treasure to claim gems.
-   - **🔄 Market Refresh**: Replace all 5 market cards.
+3. **Direct-Tap Actions (Costs 1 ⚡ Bolt)**:
+   - **⚔️ Tap a Sea Creature**: Attack the current fish. If your total matches its target, you hit/defeat it; if not, you lose 1 energy bolt.
+   - **🛒 Tap a Market Card**: Buy that card into your scooter's hand if your total matches its target; if not, you lose 1 energy bolt.
+   - **💎 Tap a Stockpile Treasure**: Claim that treasure for gems if your total matches its target; if not, you lose 1 energy bolt.
+   - **🔄 Refresh Market**: Replace all 5 market cards (button in the Market header).
 4. **Scooter Hand Capacity**: When buying at capacity, choose one card from your hand to permanently scrap.
-5. **Final Attack at 0 Bolts**: You get one final Attack against the creature; hit to recharge, or fail to end the journey.
+5. **Final Attack at 0 Bolts**: Tap the sea creature for one final Attack; hit to recharge, or fail to end the journey.
 6. **Sea Quests**: Complete each sea's 3 repeatable quests to bank bonus permanent gems.
 7. **Victory Lap**: Defeating the final fish recharges your scooter to full power and opens the stockpile for a final treasure-collecting spree!

@@ -2129,3 +2129,108 @@ body {
 }
 
 
+
+/* ==========================================================================
+   Direct-Tap UX Enhancements (Tap Fish to Attack, Tap Market/Treasure to Buy)
+   ========================================================================== */
+
+.fish-card-landscape.attackable {
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.fish-card-landscape.attackable:hover {
+  transform: translateY(-3px);
+  border-color: #0369a1;
+  box-shadow: 0 8px 18px rgba(2, 132, 199, 0.28), 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.fish-card-landscape.attackable:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.fish-card-landscape.matched {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.45), 0 6px 16px rgba(16, 185, 129, 0.25) !important;
+  animation: pulseMatch 1.5s infinite alternate ease-in-out;
+}
+
+.fish-card-landscape.final-attack-mode {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4), 0 6px 16px rgba(239, 68, 68, 0.25);
+  animation: pulseUrgent 1.2s infinite alternate;
+}
+
+.fish-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.fish-attack-pill {
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: #dc2626;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.3);
+}
+
+.fish-attack-pill.matched {
+  background: #10b981;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.4);
+}
+
+.fish-attack-pill.final-attack {
+  background: #b91c1c;
+  animation: pulseButton 0.9s infinite alternate;
+}
+
+.fish-attack-pill.defeated {
+  background: #64748b;
+  box-shadow: none;
+}
+
+.fish-attack-pill.blocked {
+  background: #d97706;
+}
+
+.market-header-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-refresh-inline {
+  border-left: 4px solid #d97706;
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.btn-refresh-inline:hover:not(:disabled) {
+  background: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.btn-refresh-inline:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.badge-feedback-miss {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}

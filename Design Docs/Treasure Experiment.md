@@ -16,3 +16,13 @@ Proposed rules
 * 1/3 are highly composite numbers as Targets, 6,12,18,24,30,36,42,48,54,60,66,72,78,84,90,96
 * Treasure cards are are a gem, and would just show a gem icon. They have 1,2 or 3 gems on them.
 
+
+
+Treasure Metagame
+* You keep your earned gems from a run
+* This allows you to unlock new cards that are added to the game. 
+* There are [20 cards] that can be unlocked in a linear order 
+* The back of the card has checkboxes to tick off the gems you earn to unlock it
+* It would be cool that winning awards a gem too.
+* 
+* 
