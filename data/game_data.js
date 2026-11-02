@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Google Docs (online)",
-  "importedAt": "2026-11-02T23:38:51.921Z",
+  "importedAt": "2026-11-02T23:49:40.556Z",
   "seaOrder": [
     "A",
     "B",
@@ -120,13 +120,13 @@ export const GAME_DATA = {
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
-        "A_Fish_2",
+        "B_Fish_3",
         null,
         null,
         null,
         "E_Fish_2"
       ],
-      "startFishId": "A_Fish_2",
+      "startFishId": "B_Fish_3",
       "finalFishId": "E_Fish_2",
       "fixedFishIds": null,
       "newNumberCardsText": "x3,x4,x5"

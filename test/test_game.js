@@ -53,7 +53,7 @@ assert.deepStrictEqual(encA.map(f => f.name), [
   'Clownfish with a Chainsaw',
   'Electric Eel',
   'Pufferfish in a Puffer Jacket',
-  'Electric Eel'
+  'Swordfish with a Sword'
 ]);
 console.log('   ✓ Sea A setup, Underwater Scooter, 18-card draw deck, and 4 explicit fish slots verified.');
 
@@ -287,7 +287,7 @@ assert.strictEqual(encD[0].name, 'Lionfish', 'Sea D starts with Lionfish');
 assert.strictEqual(encD[4].name, 'Manta Ray', 'Sea D finishes with Manta Ray');
 
 const encE = buildEncounters('E');
-assert.strictEqual(encE[0].name, 'Electric Eel', 'Sea E starts with Electric Eel');
+assert.strictEqual(encE[0].name, 'High 5 Fish', 'Sea E starts with High 5 Fish');
 assert.strictEqual(encE[4].name, 'Hydra', 'Sea E finishes with Hydra');
 
 const encF = buildEncounters('F');
