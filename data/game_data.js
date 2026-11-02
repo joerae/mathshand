@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Google Docs (online)",
-  "importedAt": "2026-11-02T22:05:43.076Z",
+  "importedAt": "2026-11-02T22:52:57.092Z",
   "seaOrder": [
     "A",
     "B",
@@ -28,7 +28,7 @@ export const GAME_DATA = {
       "name": "Shallow Reef",
       "description": "Getting Used to the Game. Number Bonds",
       "mathsFocus": "Addition +1 to +9",
-      "encounterRulesText": "Fixed 4 encounters: Sea A cards 1-4 in order",
+      "encounterRulesText": "A gentle first sea",
       "fishPerAdventure": 4,
       "randomised": false,
       "fishSlots": [
@@ -53,7 +53,7 @@ export const GAME_DATA = {
       "name": "Extended Addition",
       "description": "Unlocking new cards, hitting new targets. Number bonds for 10,20,30",
       "mathsFocus": "+10, +12, +20; bonds across 10/20/30",
-      "encounterRulesText": "Start with Clownfish with a Chainsaw. Rest are random",
+      "encounterRulesText": "Introducing larger fish sums",
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
@@ -74,7 +74,7 @@ export const GAME_DATA = {
       "name": "Negative Depths",
       "description": "Getting used to hitting negative numbers",
       "mathsFocus": "−1 to −5, −10; negative targets",
-      "encounterRulesText": "Start with Moray Eel. Randomised Centre. Finish with Anglerfish",
+      "encounterRulesText": "Learning to subtract",
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
@@ -95,7 +95,7 @@ export const GAME_DATA = {
       "name": "Double Trouble",
       "description": "Getting used to multiplying with x2 and x10",
       "mathsFocus": "×2 and ×10",
-      "encounterRulesText": "Start with Lionfish. Rest are random",
+      "encounterRulesText": "Multiplication with x2 and x10",
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
@@ -116,7 +116,7 @@ export const GAME_DATA = {
       "name": "Multiplication Reef",
       "description": "Get used to multiplying x3,x4,x5",
       "mathsFocus": "×3, ×4, ×5",
-      "encounterRulesText": "Start with Electric eel. Finish with Hydra",
+      "encounterRulesText": "Revision x3, x4, x5",
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
@@ -137,7 +137,7 @@ export const GAME_DATA = {
       "name": "Negative Currents",
       "description": "Learn about multiplifying 6,7,8,9",
       "mathsFocus": "x6 to x9",
-      "encounterRulesText": "Finish with Theiving Sqiud",
+      "encounterRulesText": "Learning x6 through to x9",
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
@@ -158,14 +158,14 @@ export const GAME_DATA = {
       "name": "Times Table Trench",
       "description": "Adding negative multiplicaiton of 2,3,4 and 10 against -6 to -9",
       "mathsFocus": "Negative multiplication and all over revision and great stuff",
-      "encounterRulesText": "",
+      "encounterRulesText": "Revision, including negative multiplication",
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
         null,
         null,
         null,
-        null,
+        "G_Fish_2",
         "G_Fish"
       ],
       "startFishId": null,
@@ -212,13 +212,19 @@ export const GAME_DATA = {
       "sea": "B",
       "name": "Ten Speed Scooter",
       "battery": 4,
-      "handCapacity": 7,
+      "handCapacity": 8,
       "startingHand": [
         {
           "op": "+",
           "value": 1,
           "label": "+1",
           "target": 1
+        },
+        {
+          "op": "+",
+          "value": 2,
+          "label": "+2",
+          "target": 2
         },
         {
           "op": "+",
@@ -998,11 +1004,11 @@ export const GAME_DATA = {
       "name": "Hydra",
       "copies": 1,
       "target": 32,
-      "abilityText": "Must land two separate targets (35 and 63); two successful attacks",
+      "abilityText": "Must land two separate targets (32 and 35 ); two successful attacks",
       "abilities": {
         "multiTargets": [
-          35,
-          63
+          32,
+          35
         ]
       },
       "encounterStatus": "",
@@ -1109,7 +1115,7 @@ export const GAME_DATA = {
       "sea": "A",
       "name": "Small Pearl",
       "copies": 1,
-      "target": 4,
+      "target": 5,
       "gems": 1,
       "specialRule": "",
       "status": ""
@@ -1119,7 +1125,7 @@ export const GAME_DATA = {
       "sea": "A",
       "name": "Sunken Coin",
       "copies": 1,
-      "target": 8,
+      "target": 9,
       "gems": 1,
       "specialRule": "",
       "status": ""
