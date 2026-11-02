@@ -25,10 +25,10 @@ console.log('1. Checking spreadsheet data integrity...');
 assert.strictEqual(GAME_DATA.seas.length, 7, 'Must have 7 Seas (A-G)');
 assert.deepStrictEqual(SEA_ORDER, ['A', 'B', 'C', 'D', 'E', 'F', 'G']);
 assert.strictEqual(GAME_DATA.scooters.length, 7, 'Must have 7 Scooters');
-assert.strictEqual(GAME_DATA.fish.length, 16, 'Must have 16 Fish');
+assert.strictEqual(GAME_DATA.fish.length, 21, 'Must have 21 Fish');
 assert.strictEqual(GAME_DATA.treasures.length, 16, 'Must have 16 Treasures');
 assert.strictEqual(Object.keys(GAME_DATA.quests).length, 7, 'All 7 Seas must have quests');
-console.log('   ✓ 7 seas, 7 scooters, 16 fish, 16 treasures, and 7 quest sets verified.');
+console.log('   ✓ 7 seas, 7 scooters, 21 fish, 16 treasures, and 7 quest sets verified.');
 
 // Test 2: Sea A Baseline Initialization & Scooter
 console.log('2. Checking Sea A baseline initialization & Underwater Scooter...');
@@ -210,7 +210,19 @@ squidGame.treasureStockpile.push({ uid: 'gem_t', name: 'Golden Shell', target: 2
 squidGame.onFishEncountered();
 assert.strictEqual(squidGame.treasureStockpile.length, 0, 'Squid steals all unclaimed treasures');
 assert.strictEqual(squidGame.destroyedTreasure.length, 2, 'Squid destroyed second treasure too');
-console.log('   ✓ Jellyfish, Kraken, Hydra, and Theiving Squid special abilities verified.');
+
+// 7e. Blackjack fish (Reveal two treasures when defeated)
+const blackjackGame = new GameState({
+  sea: 'E',
+  encounters: [{ id: 'E_Fish_4', name: 'Blackjack fish', target: 21, targets: [21], remainingTargets: [21], abilities: { revealTreasuresOnDefeat: 2 } }]
+});
+assert.strictEqual(blackjackGame.treasureStockpile.length, 0, 'No treasure revealed before defeat');
+blackjackGame.hand.push({ uid: 'bj21', type: 'number', op: '+', value: 21, label: '+21', target: 21 });
+const bjAttack = blackjackGame.playAttack([blackjackGame.hand.find(c => c.uid === 'bj21')]);
+assert.strictEqual(bjAttack.defeated, true, 'Blackjack fish defeated');
+assert.strictEqual(blackjackGame.treasureStockpile.length, 2, 'Defeating Blackjack fish reveals TWO treasures to stockpile');
+assert.strictEqual(bjAttack.revealedTreasures.length, 2, 'revealedTreasures contains 2 treasures');
+console.log('   ✓ Jellyfish, Kraken, Hydra, Theiving Squid, and Blackjack fish (two treasures on defeat) special abilities verified.');
 
 // Test 8: Scooter Start-of-Adventure Abilities
 console.log('8. Testing scooter abilities (start treasure reveals)...');

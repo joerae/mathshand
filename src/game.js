@@ -361,7 +361,20 @@ export class GameState {
 
     const slotsRefilled = this.refillEmptyMarketSlots();
     const refilledIndices = (this.lastRefilledIndices || []).slice();
-    const revealedTreasure = this.revealTreasureToStockpile();
+
+    // Determine how many treasures to reveal on defeat
+    // Standard: 1 treasure. Fish ability revealTreasuresOnDefeat can reveal more (e.g. Blackjack fish reveals 2)
+    const treasureCount = fish.abilities?.revealTreasuresOnDefeat ?? 1;
+    const revealedTreasures = [];
+    for (let i = 0; i < treasureCount; i++) {
+      const t = this.revealTreasureToStockpile();
+      if (t) revealedTreasures.push(t);
+    }
+    const revealedTreasure = revealedTreasures[0] || null;
+
+    if (treasureCount > 1 && revealedTreasures.length > 0) {
+      this.addLog(`✨ ${fish.name} BONUS: Revealed ${revealedTreasures.length} treasures into the stockpile!`, 'treasure');
+    }
 
     // Fish ability: discard cards when defeated
     const discardDefeatCount = fish.abilities?.discardOnDefeat
@@ -381,7 +394,7 @@ export class GameState {
       this.emitQuestEvent({ type: 'adventure_complete' });
       this.addLog(`🏆 ${fish.name.toUpperCase()} DEFEATED — Sea ${this.sea.letter} complete! Victory Lap with ${this.currentBolts}/${this.maxBolts} ⚡.`, 'victory');
       if (this.currentBolts === 0 || this.treasureStockpile.length === 0) this.finishVictoryLap();
-      return { recharged, slotsRefilled, refilledIndices, revealedTreasure };
+      return { recharged, slotsRefilled, refilledIndices, revealedTreasure, revealedTreasures };
     }
 
     this.currentMonsterIndex++;
@@ -389,7 +402,7 @@ export class GameState {
     this.addLog(`⚡ Battery ${this.currentBolts}/${this.maxBolts}, refilled ${slotsRefilled} market slots. Next: ${next.name} (🎯 ${next.targets.join(' & ')})!`, 'success');
     this.onFishEncountered();
     this.checkFinalAttackTrigger();
-    return { recharged, slotsRefilled, refilledIndices, revealedTreasure };
+    return { recharged, slotsRefilled, refilledIndices, revealedTreasure, revealedTreasures };
   }
 
   finishVictoryLap() {

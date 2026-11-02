@@ -202,6 +202,14 @@ function parseFishAbility(text, context) {
     }
     recognised = true;
   }
+  const revealTreasures = lower.match(/reveal (\w+)? ?(additional |extra )?(treasure cards?|treasures?)/);
+  if (revealTreasures) {
+    const word = revealTreasures[1];
+    const isAdditional = !!revealTreasures[2];
+    const num = WORD_NUMBERS[word] ?? (parseInt(word, 10) || 1);
+    a.revealTreasuresOnDefeat = isAdditional ? (1 + num) : num;
+    recognised = true;
+  }
   if (/unclaimed treasures? (disappear|are destroyed|are removed)/.test(lower)) {
     a.destroyTreasureOnEncounter = true; recognised = true;
   }

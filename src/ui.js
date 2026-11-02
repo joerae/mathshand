@@ -380,7 +380,7 @@ export class GameUI {
    * 2. Pops the newly revealed Treasure card out of the defeated fish and flies it to the Stockpile
    * 3. Pulses the recharged battery bolts and deals in any refilled market slots
    */
-  animateFishDefeatSequence({ defeatedFish, total, revealedTreasure, recharged, refilledIndices }) {
+  animateFishDefeatSequence({ defeatedFish, total, revealedTreasure, revealedTreasures, recharged, refilledIndices }) {
     const fishCardEl = this.fishCardEl;
     if (!fishCardEl) return;
 
@@ -399,80 +399,77 @@ export class GameUI {
     this.triggerElementAnim(fishCardEl, 'anim-fish-defeat-impact', 900);
     setTimeout(() => overlay.remove(), 880);
 
-    // 2. Treasure card emerging from the defeated fish and flying to the Treasure Stockpile
-    if (revealedTreasure && this.stockpileSlotsEl) {
+    // 2. Treasure card(s) emerging from the defeated fish and flying to the Treasure Stockpile
+    const treasuresToAnimate = Array.isArray(revealedTreasures) && revealedTreasures.length > 0
+      ? revealedTreasures
+      : (revealedTreasure ? [revealedTreasure] : []);
+
+    if (treasuresToAnimate.length > 0 && this.stockpileSlotsEl) {
       const stockpileCards = this.stockpileSlotsEl.querySelectorAll('.stockpile-card');
-      const destCardEl = stockpileCards[stockpileCards.length - 1];
-      const wasStolen = !this.game.treasureStockpile.some(t => (t.uid || t.id) === (revealedTreasure.uid || revealedTreasure.id));
 
-      if (destCardEl && !wasStolen) {
-        const destRect = destCardEl.getBoundingClientRect();
-        destCardEl.style.visibility = 'hidden';
+      treasuresToAnimate.forEach((tItem, tIdx) => {
+        const destIndex = stockpileCards.length - treasuresToAnimate.length + tIdx;
+        const destCardEl = stockpileCards[destIndex];
+        const wasStolen = !this.game.treasureStockpile.some(t => (t.uid || t.id) === (tItem.uid || tItem.id));
 
-        const flyer = document.createElement('div');
-        flyer.className = 'portrait-card stockpile-card treasure-card fx-flying-card fx-treasure-drop';
-        flyer.innerHTML = `
-          <div class="fx-drop-banner">💎 TREASURE!</div>
-          <div class="card-corner-top">💎 ${revealedTreasure.gems}</div>
-          <div class="card-center-gems">${revealedTreasure.label}</div>
-          <div class="treasure-name">${revealedTreasure.name}</div>
-          <div class="card-target-bottom">🎯 ${revealedTreasure.target}</div>
-        `;
+        if (destCardEl && !wasStolen) {
+          const destRect = destCardEl.getBoundingClientRect();
+          destCardEl.style.visibility = 'hidden';
 
-        const cardW = 86;
-        const cardH = 122;
-        const startLeft = fishRect.left + fishRect.width / 2 - cardW / 2;
-        const startTop = fishRect.top + fishRect.height / 2 - cardH / 2;
-
-        flyer.style.left = `${startLeft}px`;
-        flyer.style.top = `${startTop}px`;
-        flyer.style.width = `${cardW}px`;
-        flyer.style.height = `${cardH}px`;
-        document.body.appendChild(flyer);
-
-        const dx = (destRect.left + destRect.width / 2) - (startLeft + cardW / 2);
-        const dy = (destRect.top + destRect.height / 2) - (startTop + cardH / 2);
-
-        if (typeof flyer.animate === 'function') {
-          const anim = flyer.animate([
-            { transform: 'translate(0px, 12px) scale(0.25) rotate(-12deg)', opacity: 0 },
-            { transform: 'translate(0px, -22px) scale(1.22) rotate(4deg)', opacity: 1, offset: 0.28 },
-            { transform: 'translate(0px, -26px) scale(1.18) rotate(0deg)', opacity: 1, offset: 0.52 },
-            { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)', opacity: 1` }
-          ], {
-            duration: 1050,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            fill: 'forwards'
-          });
-
-          // Fix keyframe syntax by passing clean objects:
-          anim.cancel();
-          const cleanAnim = flyer.animate([
-            { transform: 'translate(0px, 12px) scale(0.25) rotate(-12deg)', opacity: 0 },
-            { transform: 'translate(0px, -22px) scale(1.22) rotate(4deg)', opacity: 1, offset: 0.28 },
-            { transform: 'translate(0px, -26px) scale(1.18) rotate(0deg)', opacity: 1, offset: 0.52 },
-            { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)`, opacity: 1 }
-          ], {
-            duration: 1050,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            fill: 'forwards'
-          });
-
-          cleanAnim.onfinish = () => {
-            flyer.remove();
-            destCardEl.style.visibility = '';
-            this.triggerElementAnim(destCardEl, 'anim-treasure-landed', 750);
-            this.spawnFloatingCallout(destCardEl, `💎 ${revealedTreasure.name}!`, 'treasure', -12);
-          };
-        } else {
           setTimeout(() => {
-            flyer.remove();
-            destCardEl.style.visibility = '';
-          }, 1050);
+            const flyer = document.createElement('div');
+            flyer.className = 'portrait-card stockpile-card treasure-card fx-flying-card fx-treasure-drop';
+            flyer.innerHTML = `
+              <div class="fx-drop-banner">💎 TREASURE!</div>
+              <div class="card-corner-top">💎 ${tItem.gems}</div>
+              <div class="card-center-gems">${tItem.label}</div>
+              <div class="treasure-name">${tItem.name}</div>
+              <div class="card-target-bottom">🎯 ${tItem.target}</div>
+            `;
+
+            const cardW = 86;
+            const cardH = 122;
+            const startLeft = fishRect.left + fishRect.width / 2 - cardW / 2;
+            const startTop = fishRect.top + fishRect.height / 2 - cardH / 2;
+
+            flyer.style.left = `${startLeft}px`;
+            flyer.style.top = `${startTop}px`;
+            flyer.style.width = `${cardW}px`;
+            flyer.style.height = `${cardH}px`;
+            document.body.appendChild(flyer);
+
+            const dx = (destRect.left + destRect.width / 2) - (startLeft + cardW / 2);
+            const dy = (destRect.top + destRect.height / 2) - (startTop + cardH / 2);
+
+            if (typeof flyer.animate === 'function') {
+              const cleanAnim = flyer.animate([
+                { transform: 'translate(0px, 12px) scale(0.25) rotate(-12deg)', opacity: 0 },
+                { transform: 'translate(0px, -22px) scale(1.22) rotate(4deg)', opacity: 1, offset: 0.28 },
+                { transform: 'translate(0px, -26px) scale(1.18) rotate(0deg)', opacity: 1, offset: 0.52 },
+                { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)`, opacity: 1 }
+              ], {
+                duration: 1050,
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                fill: 'forwards'
+              });
+
+              cleanAnim.onfinish = () => {
+                flyer.remove();
+                destCardEl.style.visibility = '';
+                this.triggerElementAnim(destCardEl, 'anim-treasure-landed', 750);
+                this.spawnFloatingCallout(destCardEl, `💎 ${tItem.name}!`, 'treasure', -12);
+              };
+            } else {
+              setTimeout(() => {
+                flyer.remove();
+                destCardEl.style.visibility = '';
+              }, 1050);
+            }
+          }, tIdx * 250);
+        } else if (wasStolen) {
+          this.spawnFloatingCallout(fishCardEl, `🦑 ${this.game.currentMonster?.name} stole the treasure!`, 'miss', -20);
         }
-      } else if (wasStolen) {
-        this.spawnFloatingCallout(fishCardEl, `🦑 ${this.game.currentMonster?.name} stole the treasure!`, 'miss', -20);
-      }
+      });
     }
 
     // 3. Battery recharge pulse
@@ -629,6 +626,7 @@ export class GameUI {
         defeatedFish: res.defeatedFish || fish,
         total: res.total,
         revealedTreasure: res.revealedTreasure,
+        revealedTreasures: res.revealedTreasures,
         recharged: res.recharged,
         refilledIndices: res.refilledIndices
       });

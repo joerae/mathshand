@@ -8,7 +8,7 @@
  */
 export const GAME_DATA = {
   "source": "Google Docs (online)",
-  "importedAt": "2026-11-02T21:39:05.066Z",
+  "importedAt": "2026-11-02T22:05:43.076Z",
   "seaOrder": [
     "A",
     "B",
@@ -57,14 +57,14 @@ export const GAME_DATA = {
       "fishPerAdventure": 5,
       "randomised": true,
       "fishSlots": [
-        "A_Fish",
         null,
         null,
         null,
-        null
+        null,
+        "B_Fish_4"
       ],
-      "startFishId": "A_Fish",
-      "finalFishId": null,
+      "startFishId": null,
+      "finalFishId": "B_Fish_4",
       "fixedFishIds": null,
       "newNumberCardsText": "+10,+12,+20,"
     },
@@ -222,9 +222,15 @@ export const GAME_DATA = {
         },
         {
           "op": "+",
-          "value": 5,
-          "label": "+5",
-          "target": 5
+          "value": 4,
+          "label": "+4",
+          "target": 4
+        },
+        {
+          "op": "+",
+          "value": 6,
+          "label": "+6",
+          "target": 6
         },
         {
           "op": "+",
@@ -906,6 +912,28 @@ export const GAME_DATA = {
       "notes": ""
     },
     {
+      "id": "B_Fish_3",
+      "sea": "B",
+      "name": "High 5 Fish",
+      "copies": 1,
+      "target": 15,
+      "abilityText": "",
+      "abilities": {},
+      "encounterStatus": "",
+      "notes": ""
+    },
+    {
+      "id": "B_Fish_4",
+      "sea": "B",
+      "name": "Squarefish",
+      "copies": 1,
+      "target": 36,
+      "abilityText": "",
+      "abilities": {},
+      "encounterStatus": "",
+      "notes": ""
+    },
+    {
       "id": "C_Fish",
       "sea": "C",
       "name": "Moray Eel",
@@ -956,7 +984,7 @@ export const GAME_DATA = {
       "sea": "E",
       "name": "Kraken Takin’ a Break’n",
       "copies": 1,
-      "target": 15,
+      "target": 28,
       "abilityText": "Discard one number card of your choice when defeated",
       "abilities": {
         "discardOnDefeat": 1
@@ -983,7 +1011,7 @@ export const GAME_DATA = {
     {
       "id": "E_Fish_3",
       "sea": "E",
-      "name": "Squarefish",
+      "name": "Baby Squarefish",
       "copies": 1,
       "target": 25,
       "abilityText": "",
@@ -997,8 +1025,10 @@ export const GAME_DATA = {
       "name": "Blackjack fish",
       "copies": 1,
       "target": 21,
-      "abilityText": "",
-      "abilities": {},
+      "abilityText": "Reveal two treasures when defeated",
+      "abilities": {
+        "revealTreasuresOnDefeat": 2
+      },
       "encounterStatus": "",
       "notes": ""
     },
@@ -1031,7 +1061,7 @@ export const GAME_DATA = {
     {
       "id": "F_Fish_3",
       "sea": "F",
-      "name": "Squarefish XL",
+      "name": "Grandma Squarefish",
       "copies": 1,
       "target": 49,
       "abilityText": "",
